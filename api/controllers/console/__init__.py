@@ -179,6 +179,7 @@ from .workspace import (
     model_providers,
     models,
     plugin,
+    real_name_verification,
     tool_providers,
     workspace,
 )

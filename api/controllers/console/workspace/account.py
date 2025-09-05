@@ -139,6 +139,124 @@ class AccountAvatarApi(Resource):
         return updated_account
 
 
+class AccountNicknameApi(Resource):
+    @setup_required
+    @login_required
+    @account_initialization_required
+    @marshal_with(account_fields)
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument("nickname", type=str, required=True, location="json")
+        args = parser.parse_args()
+
+        # Validate nickname length
+        if len(args["nickname"]) < 1 or len(args["nickname"]) > 50:
+            raise ValueError("Nickname must be between 1 and 50 characters.")
+
+        updated_account = AccountService.update_account(current_user, nickname=args["nickname"])
+
+        return updated_account
+
+
+class AccountAvatarUploadApi(Resource):
+    @setup_required
+    @login_required
+    @account_initialization_required
+    def post(self):
+        from werkzeug.datastructures import FileStorage
+        
+        parser = reqparse.RequestParser()
+        parser.add_argument("avatar", type=FileStorage, location="files", required=True)
+        args = parser.parse_args()
+
+        avatar_file = args["avatar"]
+        if not avatar_file:
+            raise ValueError("Avatar file is required")
+
+        # Validate file type
+        if not avatar_file.content_type or not avatar_file.content_type.startswith('image/'):
+            raise ValueError("Invalid image format")
+
+        # Validate file size (5MB limit)
+        avatar_file.seek(0, 2)  # Seek to end
+        file_size = avatar_file.tell()
+        avatar_file.seek(0)  # Reset to beginning
+        
+        if file_size > 5 * 1024 * 1024:
+            raise ValueError("Image file too large. Maximum size is 5MB.")
+
+        # Save the uploaded avatar
+        avatar_url = AccountService.upload_avatar(current_user, avatar_file)
+        
+        return {"avatar_url": avatar_url}
+
+
+class PhoneChangeRequestApi(Resource):
+    @setup_required
+    @login_required
+    @account_initialization_required
+    def post(self):
+        from services.auth.phone_auth_service import PhoneAuthService
+        
+        parser = reqparse.RequestParser()
+        parser.add_argument("old_phone", type=str, required=False, location="json")
+        parser.add_argument("new_phone", type=str, required=True, location="json")
+        parser.add_argument("old_phone_code", type=str, required=False, location="json")
+        parser.add_argument("new_phone_code", type=str, required=True, location="json")
+        args = parser.parse_args()
+
+        # Verify the phone change request
+        result = PhoneAuthService.change_phone_number(
+            current_user,
+            args["old_phone"],
+            args["new_phone"], 
+            args["old_phone_code"],
+            args["new_phone_code"]
+        )
+        
+        return {"result": "success"}
+
+
+class ProfileHistoryApi(Resource):
+    history_item_fields = {
+        "id": fields.String,
+        "field_name": fields.String,
+        "field_label": fields.String,
+        "old_value": fields.String,
+        "new_value": fields.String,
+        "ip_address": fields.String,
+        "user_agent": fields.String,
+        "created_at": TimestampField,
+        "verification_required": fields.Boolean,
+    }
+    
+    history_list_fields = {
+        "data": fields.List(fields.Nested(history_item_fields)),
+        "has_next": fields.Boolean,
+        "page": fields.Integer,
+        "total": fields.Integer,
+    }
+
+    @setup_required
+    @login_required
+    @account_initialization_required
+    @marshal_with(history_list_fields)
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument("page", type=int, location="args", default=1)
+        parser.add_argument("limit", type=int, location="args", default=20)
+        args = parser.parse_args()
+
+        # Get profile modification history for the current user
+        history_data = AccountService.get_profile_history(
+            current_user,
+            page=args["page"],
+            limit=args["limit"]
+        )
+        
+        return history_data
+
+
 class AccountInterfaceLanguageApi(Resource):
     @setup_required
     @login_required
@@ -531,6 +649,10 @@ api.add_resource(AccountInitApi, "/account/init")
 api.add_resource(AccountProfileApi, "/account/profile")
 api.add_resource(AccountNameApi, "/account/name")
 api.add_resource(AccountAvatarApi, "/account/avatar")
+api.add_resource(AccountNicknameApi, "/account/nickname")
+api.add_resource(AccountAvatarUploadApi, "/account/avatar/upload")
+api.add_resource(PhoneChangeRequestApi, "/account/phone/change")
+api.add_resource(ProfileHistoryApi, "/account/profile/history")
 api.add_resource(AccountInterfaceLanguageApi, "/account/interface-language")
 api.add_resource(AccountInterfaceThemeApi, "/account/interface-theme")
 api.add_resource(AccountTimezoneApi, "/account/timezone")

@@ -19,6 +19,7 @@ import type {
   Provider,
   ProviderAnthropicToken,
   ProviderAzureToken,
+  RealNameVerificationStatus,
   SetupStatusResponse,
   UserProfileOriginResponse,
 } from '@/models/common'
@@ -82,6 +83,30 @@ export const fetchUserProfile: Fetcher<UserProfileOriginResponse, { url: string;
 
 export const updateUserProfile: Fetcher<CommonResponse, { url: string; body: Record<string, any> }> = ({ url, body }) => {
   return post<CommonResponse>(url, { body })
+}
+
+// SMS and Phone Related APIs
+export const sendSMSCode: Fetcher<CommonResponse, { phone_number: string; purpose: string }> = ({ phone_number, purpose }) => {
+  return post<CommonResponse>('/console/api/sms/send-code', { body: { phone_number, purpose } })
+}
+
+export const verifySMSCode: Fetcher<CommonResponse, { phone_number: string; verification_code: string; purpose: string }> = ({ phone_number, verification_code, purpose }) => {
+  return post<CommonResponse>('/console/api/sms/verify-code', { body: { phone_number, verification_code, purpose } })
+}
+
+export const changePhoneNumber: Fetcher<CommonResponse, { old_phone: string | null; new_phone: string; old_phone_code?: string; new_phone_code: string }> = ({ old_phone, new_phone, old_phone_code, new_phone_code }) => {
+  return post<CommonResponse>('/console/api/account/phone/change', { 
+    body: { 
+      old_phone, 
+      new_phone, 
+      old_phone_code, 
+      new_phone_code 
+    } 
+  })
+}
+
+export const getProfileHistory: Fetcher<{ data: any[]; has_next: boolean; page: number; total: number }, { page: number; limit: number }> = ({ page, limit }) => {
+  return get<{ data: any[]; has_next: boolean; page: number; total: number }>('/console/api/account/profile/history', { page, limit })
 }
 
 export const logout: Fetcher<CommonResponse, { url: string; params: Record<string, any> }> = ({ url, params }) => {
@@ -397,3 +422,25 @@ export const resetEmail = (body: { new_email: string; token: string }) =>
 
 export const checkEmailExisted = (body: { email: string }) =>
   post<CommonResponse>('/account/change-email/check-email-unique', { body }, { silent: true })
+
+// Real Name Verification APIs
+export const getRealNameVerificationStatus = () =>
+  get<RealNameVerificationStatus>('/real-name-verification/status')
+
+export const submitRealNameVerification = (formData: FormData) =>
+  post<RealNameVerificationStatus>('/real-name-verification/submit', {
+    body: formData,
+    headers: {
+      // Don't set Content-Type to let browser set multipart/form-data boundary
+    },
+    bodyType: 'form-data',
+  })
+
+export const resubmitRealNameVerification = (verificationId: string, formData: FormData) =>
+  post<RealNameVerificationStatus>(`/real-name-verification/${verificationId}/resubmit`, {
+    body: formData,
+    headers: {
+      // Don't set Content-Type to let browser set multipart/form-data boundary  
+    },
+    bodyType: 'form-data',
+  })

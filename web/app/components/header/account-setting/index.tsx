@@ -16,6 +16,8 @@ import {
   RiPuzzle2Fill,
   RiPuzzle2Line,
   RiTranslate2,
+  RiUserLine,
+  RiUserFill,
 } from '@remixicon/react'
 import Button from '../../base/button'
 import MembersPage from './members-page'
@@ -23,6 +25,8 @@ import LanguagePage from './language-page'
 import ApiBasedExtensionPage from './api-based-extension-page'
 import DataSourcePage from './data-source-page'
 import ModelProviderPage from './model-provider-page'
+import ProfileEditPage from './profile-edit-page'
+import RealNameVerification from './real-name-verification'
 import cn from '@/utils/classnames'
 import BillingPage from '@/app/components/billing/billing-page'
 import CustomPage from '@/app/components/custom/custom-page'
@@ -51,7 +55,7 @@ type GroupItem = {
 
 export default function AccountSetting({
   onCancel,
-  activeTab = 'members',
+  activeTab = 'profile',
 }: IAccountSettingProps) {
   const [activeMenu, setActiveMenu] = useState(activeTab)
   const { t } = useTranslation()
@@ -117,10 +121,22 @@ export default function AccountSetting({
       name: t('common.settings.generalGroup'),
       items: [
         {
+          key: 'profile',
+          name: t('common.settings.profile'),
+          icon: <RiUserLine className={iconClassName} />,
+          activeIcon: <RiUserFill className={iconClassName} />,
+        },
+        {
           key: 'language',
           name: t('common.settings.language'),
           icon: <RiTranslate2 className={iconClassName} />,
           activeIcon: <RiTranslate2 className={iconClassName} />,
+        },
+        {
+          key: 'real-name-verification',
+          name: t('common.settings.realNameVerification'),
+          icon: <RiUserLine className={iconClassName} />,
+          activeIcon: <RiUserFill className={iconClassName} />,
         },
       ],
     },
@@ -219,7 +235,9 @@ export default function AccountSetting({
               {activeMenu === 'data-source' && <DataSourcePage />}
               {activeMenu === 'api-based-extension' && <ApiBasedExtensionPage />}
               {activeMenu === 'custom' && <CustomPage />}
+              {activeMenu === 'profile' && <ProfileEditPage />}
               {activeMenu === 'language' && <LanguagePage />}
+              {activeMenu === 'real-name-verification' && <RealNameVerification />}
             </div>
           </div>
         </div>

@@ -48,6 +48,23 @@ const translation = {
   checkEmailForResetLink: 'Please check your email for a link to reset your password. If it doesn\'t appear within a few minutes, make sure to check your spam folder.',
   passwordChanged: 'Sign in now',
   changePassword: 'Set a password',
+  // SMS Authentication
+  sms: {
+    sendCode: 'Send Code',
+    resendCode: 'Resend',
+    verificationCode: 'Verification Code',
+    codeSent: 'Verification code sent',
+    codeInputPlaceholder: 'Enter 6-digit code',
+    invalidCode: 'Invalid verification code',
+    codeExpired: 'Verification code expired',
+  },
+  phone: {
+    phoneNumber: 'Phone Number',
+    phonePlaceholder: 'Enter phone number',
+    invalidFormat: 'Invalid phone number format',
+    loginWithPhone: 'Login with Phone',
+    registerWithPhone: 'Register with Phone',
+  },
   changePasswordTip: 'Please enter a new password for your account',
   changePasswordBtn: 'Set a password',
   invalidToken: 'Invalid or expired token',

@@ -923,6 +923,11 @@ class Message(Base):
     updated_at = mapped_column(sa.DateTime, nullable=False, server_default=func.current_timestamp())
     agent_based: Mapped[bool] = mapped_column(sa.Boolean, nullable=False, server_default=sa.text("false"))
     workflow_run_id: Mapped[Optional[str]] = mapped_column(StringUUID)
+    
+    # AI content identification fields
+    ai_generated: Mapped[bool] = mapped_column(sa.Boolean, server_default=sa.text('false'), nullable=False)
+    ai_model_info: Mapped[Optional[dict]] = mapped_column(sa.JSON, nullable=True)
+    content_labels: Mapped[Optional[dict]] = mapped_column(sa.JSON, nullable=True)
 
     @property
     def inputs(self):

@@ -347,13 +347,33 @@ class AccountService:
 
     @staticmethod
     def update_account(account, **kwargs):
-        """Update account fields"""
+        """Update account fields with history logging for sensitive changes"""
+        sensitive_fields = ['nickname', 'phone_number', 'real_name', 'avatar_url']
+        
         for field, value in kwargs.items():
             if hasattr(account, field):
+                old_value = getattr(account, field, None)
+                
+                # Set the new value
                 setattr(account, field, value)
+                
+                # Log changes for sensitive fields
+                if field in sensitive_fields and old_value != value:
+                    old_value_str = str(old_value) if old_value is not None else None
+                    new_value_str = str(value) if value is not None else None
+                    
+                    AccountService.log_profile_modification(
+                        account=account,
+                        field_name=field,
+                        old_value=old_value_str,
+                        new_value=new_value_str,
+                        field_label=None,
+                        verification_required=field in ['phone_number', 'real_name']
+                    )
             else:
                 raise AttributeError(f"Invalid field: {field}")
 
+        account.updated_at = naive_utc_now()
         db.session.commit()
         return account
 
@@ -856,6 +876,148 @@ class AccountService:
     @staticmethod
     def check_email_unique(email: str) -> bool:
         return db.session.query(Account).filter_by(email=email).first() is None
+
+    @staticmethod
+    def upload_avatar(account: Account, avatar_file) -> str:
+        """Upload and save avatar file"""
+        import os
+        import uuid
+        from PIL import Image
+        from extensions.ext_storage import storage
+        
+        # Generate unique filename
+        file_extension = os.path.splitext(avatar_file.filename)[1] or '.jpg'
+        avatar_filename = f"avatars/{account.id}/{uuid.uuid4().hex}{file_extension}"
+        
+        # Process image - resize and optimize
+        image = Image.open(avatar_file.stream)
+        
+        # Convert to RGB if necessary (for PNG with transparency)
+        if image.mode in ('RGBA', 'LA'):
+            background = Image.new('RGB', image.size, (255, 255, 255))
+            background.paste(image, mask=image.split()[-1] if image.mode == 'RGBA' else None)
+            image = background
+        
+        # Resize to maximum 400x400 while maintaining aspect ratio
+        image.thumbnail((400, 400), Image.Resampling.LANCZOS)
+        
+        # Save optimized image
+        from io import BytesIO
+        output = BytesIO()
+        image.save(output, format='JPEG', quality=85, optimize=True)
+        output.seek(0)
+        
+        # Save to storage
+        avatar_url = storage.save(avatar_filename, output)
+        
+        # Update account avatar_url
+        account.avatar_url = avatar_url
+        account.updated_at = naive_utc_now()
+        db.session.commit()
+        
+        return avatar_url
+
+    @staticmethod
+    def get_profile_history(account: Account, page: int = 1, limit: int = 20) -> dict:
+        """Get profile modification history for an account"""
+        from models.profile_history import ProfileModificationHistory
+        from flask import request
+        
+        offset = (page - 1) * limit
+        
+        query = db.session.query(ProfileModificationHistory).filter_by(user_id=account.id)
+        total = query.count()
+        
+        history_items = query.order_by(ProfileModificationHistory.created_at.desc())\
+                            .offset(offset).limit(limit).all()
+        
+        # Convert to dict format
+        data = []
+        for item in history_items:
+            data.append({
+                'id': item.id,
+                'field_name': item.field_name,
+                'field_label': item.field_label,
+                'old_value': item.old_value,
+                'new_value': item.new_value,
+                'ip_address': item.ip_address,
+                'user_agent': item.user_agent,
+                'created_at': item.created_at,
+                'verification_required': item.verification_required
+            })
+        
+        has_next = offset + limit < total
+        
+        return {
+            'data': data,
+            'has_next': has_next,
+            'page': page,
+            'total': total
+        }
+
+    @staticmethod
+    def log_profile_modification(
+        account: Account,
+        field_name: str,
+        old_value: Optional[str],
+        new_value: str,
+        field_label: Optional[str] = None,
+        verification_required: bool = False
+    ):
+        """Log profile modification for security audit"""
+        from models.profile_history import ProfileModificationHistory
+        from flask import request
+        
+        # Get IP address and user agent from request
+        ip_address = request.remote_addr or '127.0.0.1'
+        user_agent = request.headers.get('User-Agent', 'Unknown')
+        
+        # Create history record
+        history_record = ProfileModificationHistory.create_history_record(
+            user_id=account.id,
+            field_name=field_name,
+            old_value=old_value,
+            new_value=new_value,
+            ip_address=ip_address,
+            user_agent=user_agent,
+            field_label=field_label,
+            verification_required=verification_required
+        )
+        
+        db.session.add(history_record)
+        db.session.commit()
+
+    @staticmethod
+    def update_account_with_history(account, **kwargs):
+        """Update account fields with history logging"""
+        for field, value in kwargs.items():
+            if hasattr(account, field):
+                old_value = getattr(account, field, None)
+                
+                # Only log if value actually changed
+                if old_value != value:
+                    # Convert old_value to string for logging
+                    old_value_str = str(old_value) if old_value is not None else None
+                    new_value_str = str(value) if value is not None else None
+                    
+                    # Set the new value
+                    setattr(account, field, value)
+                    
+                    # Log the change
+                    AccountService.log_profile_modification(
+                        account=account,
+                        field_name=field,
+                        old_value=old_value_str,
+                        new_value=new_value_str,
+                        field_label=None,  # Will be set by frontend
+                        verification_required=field in ['phone_number', 'real_name', 'email']
+                    )
+            else:
+                raise AttributeError(f"Invalid field: {field}")
+
+        account.updated_at = naive_utc_now()
+        db.session.commit()
+        return account
 
 
 class TenantService:

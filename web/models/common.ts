@@ -314,3 +314,19 @@ export type StructuredOutputRulesResponse = {
   output: string
   error?: string
 }
+
+export type IDType = 'national_id' | 'passport' | 'drivers_license' | 'other'
+
+export type RealNameVerificationStatus = {
+  id: string
+  status: 'pending' | 'approved' | 'rejected' | 'expired'
+  real_name: string
+  id_type: IDType
+  rejection_reason?: string
+  verified_at?: string
+  created_at: string
+  updated_at: string
+  is_approved: boolean
+  is_pending: boolean
+  has_documents: boolean
+}

@@ -13,6 +13,9 @@ def init_app(app: DifyApp):
     from controllers.mcp import bp as mcp_bp
     from controllers.service_api import bp as service_api_bp
     from controllers.web import bp as web_bp
+    from controllers.reports import bp as reports_bp
+    from controllers.verification import bp as verification_bp
+    from controllers.system_health import health_bp
 
     CORS(
         service_api_bp,
@@ -50,3 +53,29 @@ def init_app(app: DifyApp):
 
     app.register_blueprint(inner_api_bp)
     app.register_blueprint(mcp_bp)
+    
+    CORS(
+        reports_bp,
+        resources={r"/*": {"origins": dify_config.WEB_API_CORS_ALLOW_ORIGINS}},
+        supports_credentials=True,
+        allow_headers=["Content-Type", "Authorization"],
+        methods=["GET", "PUT", "POST", "DELETE", "OPTIONS", "PATCH"],
+    )
+    app.register_blueprint(reports_bp)
+    
+    CORS(
+        verification_bp,
+        resources={r"/*": {"origins": dify_config.WEB_API_CORS_ALLOW_ORIGINS}},
+        supports_credentials=True,
+        allow_headers=["Content-Type", "Authorization"],
+        methods=["GET", "PUT", "POST", "DELETE", "OPTIONS", "PATCH"],
+    )
+    app.register_blueprint(verification_bp)
+    
+    CORS(
+        health_bp,
+        resources={r"/*": {"origins": "*"}},
+        allow_headers=["Content-Type"],
+        methods=["GET", "OPTIONS"],
+    )
+    app.register_blueprint(health_bp)

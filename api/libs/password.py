@@ -2,6 +2,7 @@ import base64
 import binascii
 import hashlib
 import re
+import secrets
 
 password_pattern = r"^(?=.*[a-zA-Z])(?=.*\d).{8,}$"
 
@@ -19,6 +20,11 @@ def valid_password(password):
 def hash_password(password_str, salt_byte):
     dk = hashlib.pbkdf2_hmac("sha256", password_str.encode("utf-8"), salt_byte, 10000)
     return binascii.hexlify(dk)
+
+
+def generate_password_salt():
+    """Generate a random salt for password hashing."""
+    return base64.b64encode(secrets.token_bytes(32)).decode('utf-8')
 
 
 def compare_password(password_str, password_hashed_base64, salt_base64):

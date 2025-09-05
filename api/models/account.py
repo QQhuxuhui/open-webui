@@ -6,7 +6,7 @@ from typing import Optional, cast
 import sqlalchemy as sa
 from flask_login import UserMixin  # type: ignore
 from sqlalchemy import DateTime, String, func, select
-from sqlalchemy.orm import Mapped, mapped_column, reconstructor
+from sqlalchemy.orm import Mapped, mapped_column, reconstructor, relationship
 
 from models.base import Base
 
@@ -102,6 +102,15 @@ class Account(UserMixin, Base):
     initialized_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp(), nullable=False)
+    
+    # Compliance-related fields
+    phone_number: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    phone_verified: Mapped[bool] = mapped_column(sa.Boolean, server_default=sa.text('false'), nullable=False)
+    real_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    real_name_verified: Mapped[bool] = mapped_column(sa.Boolean, server_default=sa.text('false'), nullable=False)
+    real_name_verified_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    nickname: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    avatar_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
 
     @reconstructor
     def init_on_load(self):
@@ -187,6 +196,15 @@ class Account(UserMixin, Base):
     @property
     def is_dataset_operator(self):
         return self.role == TenantAccountRole.DATASET_OPERATOR
+    
+    # Compliance relationships
+    consents = relationship("UserConsent", back_populates="user", cascade="all, delete-orphan")
+    content_reports = relationship("ContentReport", foreign_keys="ContentReport.reporter_id", 
+                                 back_populates="reporter", cascade="all, delete-orphan")
+    real_name_verifications = relationship("RealNameVerification", foreign_keys="RealNameVerification.user_id",
+                                         back_populates="user", cascade="all, delete-orphan")
+    profile_modifications = relationship("ProfileModificationHistory", back_populates="user", 
+                                       cascade="all, delete-orphan")
 
 
 class TenantStatus(enum.StrEnum):

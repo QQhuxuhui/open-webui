@@ -8,6 +8,19 @@ from .account import (
     TenantAccountRole,
     TenantStatus,
 )
+from .compliance import (
+    UserConsent,
+    SmsVerification,
+    ContentReport,
+    RealNameVerification,
+    ConsentType,
+    SMSPurpose,
+    ContentType,
+    ReportCategory,
+    ReportStatus,
+    VerificationStatus,
+    IDType,
+)
 from .api_based_extension import APIBasedExtension, APIBasedExtensionPoint
 from .dataset import (
     AppDatasetJoin,
