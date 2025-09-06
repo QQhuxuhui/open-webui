@@ -3,6 +3,7 @@ import uuid
 import time
 import datetime
 import logging
+import os
 from aiohttp import ClientSession
 
 from open_webui.models.auths import (
@@ -17,6 +18,14 @@ from open_webui.models.auths import (
     UpdatePasswordForm,
     UserResponse,
 )
+from open_webui.models.phone_auth import (
+    PhoneSignupForm,
+    PhoneSigninForm,
+    SendCodeForm,
+    VerifyCodeResponse,
+    PhoneVerifications,
+)
+from open_webui.utils.sms import sms_service
 from open_webui.models.users import Users, UpdateProfileForm
 from open_webui.models.groups import Groups
 
@@ -1060,3 +1069,146 @@ async def get_api_key(user=Depends(get_current_user)):
         }
     else:
         raise HTTPException(404, detail=ERROR_MESSAGES.API_KEY_NOT_FOUND)
+
+
+############################
+# 手机认证 - Chinese Compliance
+############################
+
+@router.post("/phone/send-code")
+async def send_verification_code(form_data: SendCodeForm):
+    """发送手机验证码"""
+    phone = form_data.phone
+    
+    # 验证手机号格式
+    if not re.match(r'^1[3-9]\d{9}$', phone):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="手机号格式不正确"
+        )
+    
+    # 创建验证码记录
+    verification = PhoneVerifications.create_verification(phone)
+    if not verification:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="验证码发送过于频繁，请稍后再试"
+        )
+    
+    # 发送短信
+    success, message = sms_service.send_verification_code(phone, verification.code)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=message
+        )
+    
+    return {"message": "验证码发送成功"}
+
+@router.post("/phone/signup", response_model=SigninResponse)
+async def phone_signup(request: Request, form_data: PhoneSignupForm):
+    """手机号注册"""
+    phone = form_data.phone
+    code = form_data.code
+    name = form_data.name
+    
+    # 检查隐私协议和服务协议确认
+    if not form_data.privacy_agreed or not form_data.terms_agreed:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="必须同意隐私协议和服务协议"
+        )
+    
+    # 验证验证码
+    is_valid, message = PhoneVerifications.verify_code(phone, code)
+    if not is_valid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=message
+        )
+    
+    # 检查手机号是否已注册
+    if Users.get_user_by_phone(phone):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="该手机号已注册"
+        )
+    
+    # 创建用户 - 使用手机号作为临时邮箱
+    user_id = str(uuid.uuid4())
+    temp_email = f"{phone}@phone.local"
+    
+    try:
+        user = Users.insert_new_user(
+            id=user_id,
+            name=name,
+            email=temp_email,
+            role="user",
+        )
+        
+        # 更新手机号
+        Users.update_user_by_id(user_id, {"phone": phone})
+        
+        if user:
+            token = create_token(
+                data={"id": user.id},
+                expires_delta=parse_duration(
+                    os.environ.get("WEBUI_JWT_EXPIRES_IN", "7d")
+                )
+            )
+            
+            return {
+                "token": token,
+                "token_type": "Bearer",
+                "id": user.id,
+                "email": user.email,
+                "name": user.name,
+                "role": user.role,
+                "profile_image_url": user.profile_image_url,
+            }
+    except Exception as e:
+        log.exception(f"手机注册失败: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="注册失败，请稍后再试"
+        )
+
+@router.post("/phone/signin", response_model=SigninResponse)  
+async def phone_signin(request: Request, form_data: PhoneSigninForm):
+    """手机号登录"""
+    phone = form_data.phone
+    code = form_data.code
+    
+    # 验证验证码
+    is_valid, message = PhoneVerifications.verify_code(phone, code)
+    if not is_valid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=message
+        )
+    
+    # 查找用户
+    user = Users.get_user_by_phone(phone)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="用户不存在，请先注册"
+        )
+    
+    # 生成token
+    token = create_token(
+        data={"id": user.id},
+        expires_delta=parse_duration(
+            os.environ.get("WEBUI_JWT_EXPIRES_IN", "7d")  
+        )
+    )
+    
+    return {
+        "token": token,
+        "token_type": "Bearer", 
+        "id": user.id,
+        "email": user.email,
+        "name": user.name,
+        "role": user.role,
+        "profile_image_url": user.profile_image_url,
+    }

@@ -46,6 +46,7 @@
 	import NotificationToast from '$lib/components/NotificationToast.svelte';
 	import AppSidebar from '$lib/components/app/AppSidebar.svelte';
 	import { chatCompletion } from '$lib/apis/openai';
+	import { initAIContentLabeling } from '$lib/components/compliance';
 
 	import { beforeNavigate } from '$app/navigation';
 	import { updated } from '$app/state';
@@ -672,6 +673,9 @@
 			document.getElementById('splash-screen')?.remove();
 			loaded = true;
 		}
+
+		// 初始化AI内容标识系统 - Chinese Compliance
+		initAIContentLabeling();
 
 		return () => {
 			window.removeEventListener('resize', onResize);

@@ -21,6 +21,7 @@
 	import Code from '$lib/components/icons/Code.svelte';
 	import UserGroup from '$lib/components/icons/UserGroup.svelte';
 	import SignOut from '$lib/components/icons/SignOut.svelte';
+	import ReportModal from '$lib/components/compliance/ReportModal.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -32,6 +33,7 @@
 	const dispatch = createEventDispatcher();
 
 	let usage = null;
+	let showReportModal = false;
 	const getUsageInfo = async () => {
 		const res = await getUsage(localStorage.token).catch((error) => {
 			console.error('Error fetching usage info:', error);
@@ -202,6 +204,21 @@
 
 			<DropdownMenu.Item
 				class="flex rounded-md py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+				on:click={() => {
+					showReportModal = true;
+					show = false;
+				}}
+			>
+				<div class=" self-center mr-3">
+					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+					</svg>
+				</div>
+				<div class=" self-center truncate">{$i18n.language.startsWith('zh') ? '意见反馈' : 'Feedback'}</div>
+			</DropdownMenu.Item>
+
+			<DropdownMenu.Item
+				class="flex rounded-md py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition"
 				on:click={async () => {
 					const res = await userSignOut();
 					user.set(null);
@@ -260,3 +277,10 @@
 		</DropdownMenu.Content>
 	</slot>
 </DropdownMenu.Root>
+
+<ReportModal 
+	bind:show={showReportModal}
+	on:success={() => {
+		showReportModal = false;
+	}}
+/>
