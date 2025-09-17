@@ -463,12 +463,8 @@ async def ldap_auth(request: Request, response: Response, form_data: LdapForm):
 
 @router.post("/signin", response_model=SessionUserResponse)
 async def signin(request: Request, response: Response, form_data: SigninForm):
-    # 检查是否禁用了邮箱认证
-    if not ENABLE_EMAIL_AUTH:
-        raise HTTPException(
-            status_code=403,
-            detail="邮箱认证已禁用，请使用手机号登录"
-        )
+    # 允许密码登录支持邮箱和手机号两种方式
+    # 不再强制检查ENABLE_EMAIL_AUTH，而是支持混合登录
 
     if WEBUI_AUTH_TRUSTED_EMAIL_HEADER:
         if WEBUI_AUTH_TRUSTED_EMAIL_HEADER not in request.headers:

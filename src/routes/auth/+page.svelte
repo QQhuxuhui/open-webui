@@ -38,6 +38,7 @@
 	let phoneNumber = '';
 	let verificationCode = '';
 	let phoneLoginMethod = 'code'; // 'code' 或 'password'
+	let accountInput = ''; // 用于邮箱/手机号混合输入
 	let sliderCaptcha;
 	let captchaVerified = false;
 
@@ -95,11 +96,22 @@
 	const phoneSignInHandler = async () => {
 		let sessionUser;
 		if (phoneLoginMethod === 'password') {
-			// 手机号+密码登录
-			sessionUser = await phoneSignInWithPassword(phoneNumber, password).catch((error) => {
-				toast.error(`${error}`);
-				return null;
-			});
+			// 邮箱/手机号+密码登录
+			// 判断输入是邮箱还是手机号，使用对应的登录方式
+			const isPhone = /^1[3-9]\d{9}$/.test(accountInput);
+			if (isPhone) {
+				// 使用手机号密码登录
+				sessionUser = await phoneSignInWithPassword(accountInput, password).catch((error) => {
+					toast.error(`${error}`);
+					return null;
+				});
+			} else {
+				// 使用邮箱密码登录
+				sessionUser = await userSignIn(accountInput, password).catch((error) => {
+					toast.error(`${error}`);
+					return null;
+				});
+			}
 		} else {
 			// 手机号+验证码登录
 			sessionUser = await phoneSignIn(phoneNumber, verificationCode).catch((error) => {
@@ -301,7 +313,7 @@
 										{:else if mode === 'signin'}
 											{$i18n.t(`Sign in to {{WEBUI_NAME}}`, { WEBUI_NAME: $WEBUI_NAME })}
 										{:else if mode === 'phone-signin'}
-											使用手机号登录 {{$WEBUI_NAME}}
+											使用账号登录 {{$WEBUI_NAME}}
 										{:else if mode === 'phone-signup'}
 											使用手机号注册 {{$WEBUI_NAME}}
 										{:else}
@@ -354,7 +366,7 @@
 													required
 												/>
 											</div>
-										{:else if mode === 'phone-signin' || mode === 'phone-signup'}
+										{:else if mode === 'phone-signup' || (mode === 'phone-signin' && phoneLoginMethod === 'code')}
 											<div class="mb-2">
 												<label for="phone" class="text-sm font-medium text-left mb-1 block"
 													>手机号</label
@@ -392,13 +404,25 @@
 													</div>
 
 													{#if phoneLoginMethod === 'password'}
-														<label for="phone-password" class="text-sm font-medium text-left mb-1 block"
+														<label for="account-input" class="text-sm font-medium text-left mb-1 block"
+															>邮箱或手机号</label
+														>
+														<input
+															bind:value={accountInput}
+															type="text"
+															id="account-input"
+															class="my-0.5 w-full text-sm outline-hidden bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-600"
+															placeholder="请输入邮箱或手机号"
+															autocomplete="username"
+															required
+														/>
+														<label for="account-password" class="text-sm font-medium text-left mb-1 block mt-2"
 															>密码</label
 														>
 														<SensitiveInput
 															bind:value={password}
 															type="password"
-															id="phone-password"
+															id="account-password"
 															class="my-0.5 w-full text-sm outline-hidden bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-600"
 															placeholder="请输入密码"
 															autocomplete="current-password"
@@ -568,7 +592,7 @@
 												{mode === 'signin'
 													? $i18n.t('Sign in')
 													: mode === 'phone-signin'
-														? '手机号登录'
+														? '登录'
 														: mode === 'phone-signup'
 															? '手机号注册'
 															: ($config?.onboarding ?? false)
