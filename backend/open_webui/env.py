@@ -412,6 +412,11 @@ ENABLE_SIGNUP_PASSWORD_CONFIRMATION = (
     os.environ.get("ENABLE_SIGNUP_PASSWORD_CONFIRMATION", "False").lower() == "true"
 )
 
+# 控制是否启用邮箱认证功能，默认为False（禁用邮箱认证，强制使用手机号）
+ENABLE_EMAIL_AUTH = (
+    os.environ.get("ENABLE_EMAIL_AUTH", "False").lower() == "true"
+)
+
 WEBUI_AUTH_TRUSTED_EMAIL_HEADER = os.environ.get(
     "WEBUI_AUTH_TRUSTED_EMAIL_HEADER", None
 )

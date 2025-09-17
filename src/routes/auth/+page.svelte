@@ -9,7 +9,7 @@
 	import { page } from '$app/stores';
 
 	import { getBackendConfig } from '$lib/apis';
-	import { ldapUserSignIn, getSessionUser, userSignIn, userSignUp } from '$lib/apis/auths';
+	import { ldapUserSignIn, getSessionUser, userSignIn, userSignUp, phoneSignIn, phoneSignUp, sendVerificationCode } from '$lib/apis/auths';
 
 	import { WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
 	import { WEBUI_NAME, config, user, socket } from '$lib/stores';
@@ -24,7 +24,7 @@
 
 	let loaded = false;
 
-	let mode = $config?.features.enable_ldap ? 'ldap' : 'signin';
+	let mode = $config?.features.enable_ldap ? 'ldap' : 'phone-signin';
 
 	let form = null;
 
@@ -34,6 +34,8 @@
 	let confirmPassword = '';
 
 	let ldapUsername = '';
+	let phoneNumber = '';
+	let verificationCode = '';
 
 	const setSessionUser = async (sessionUser) => {
 		if (sessionUser) {
@@ -86,11 +88,39 @@
 		await setSessionUser(sessionUser);
 	};
 
+	const phoneSignInHandler = async () => {
+		const sessionUser = await phoneSignIn(phoneNumber, verificationCode).catch((error) => {
+			toast.error(`${error}`);
+			return null;
+		});
+		await setSessionUser(sessionUser);
+	};
+
+	const phoneSignUpHandler = async () => {
+		const sessionUser = await phoneSignUp(name, phoneNumber, verificationCode, generateInitialsImage(name))
+			.catch((error) => {
+				toast.error(`${error}`);
+				return null;
+			});
+		await setSessionUser(sessionUser);
+	};
+
+	const sendCodeHandler = async () => {
+		await sendVerificationCode(phoneNumber).catch((error) => {
+			toast.error(`${error}`);
+		});
+		toast.success('验证码已发送');
+	};
+
 	const submitHandler = async () => {
 		if (mode === 'ldap') {
 			await ldapSignInHandler();
 		} else if (mode === 'signin') {
 			await signInHandler();
+		} else if (mode === 'phone-signin') {
+			await phoneSignInHandler();
+		} else if (mode === 'phone-signup') {
+			await phoneSignUpHandler();
 		} else {
 			await signUpHandler();
 		}
@@ -177,7 +207,7 @@
 	bind:show={onboarding}
 	getStartedHandler={() => {
 		onboarding = false;
-		mode = $config?.features.enable_ldap ? 'ldap' : 'signup';
+		mode = $config?.features.enable_ldap ? 'ldap' : 'phone-signup';
 	}}
 />
 
@@ -235,6 +265,10 @@
 											{$i18n.t(`Sign in to {{WEBUI_NAME}} with LDAP`, { WEBUI_NAME: $WEBUI_NAME })}
 										{:else if mode === 'signin'}
 											{$i18n.t(`Sign in to {{WEBUI_NAME}}`, { WEBUI_NAME: $WEBUI_NAME })}
+										{:else if mode === 'phone-signin'}
+											使用手机号登录 {{$WEBUI_NAME}}
+										{:else if mode === 'phone-signup'}
+											使用手机号注册 {{$WEBUI_NAME}}
 										{:else}
 											{$i18n.t(`Sign up to {{WEBUI_NAME}}`, { WEBUI_NAME: $WEBUI_NAME })}
 										{/if}
@@ -252,7 +286,7 @@
 
 								{#if $config?.features.enable_login_form || $config?.features.enable_ldap || form}
 									<div class="flex flex-col mt-4">
-										{#if mode === 'signup'}
+										{#if mode === 'signup' || mode === 'phone-signup'}
 											<div class="mb-2">
 												<label for="name" class="text-sm font-medium text-left mb-1 block"
 													>{$i18n.t('Name')}</label
@@ -285,6 +319,44 @@
 													required
 												/>
 											</div>
+										{:else if mode === 'phone-signin' || mode === 'phone-signup'}
+											<div class="mb-2">
+												<label for="phone" class="text-sm font-medium text-left mb-1 block"
+													>手机号</label
+												>
+												<input
+													bind:value={phoneNumber}
+													type="tel"
+													id="phone"
+													class="my-0.5 w-full text-sm outline-hidden bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-600"
+													autocomplete="tel"
+													name="phone"
+													placeholder="请输入手机号"
+													required
+												/>
+											</div>
+											<div class="mb-2">
+												<label for="verification-code" class="text-sm font-medium text-left mb-1 block"
+													>验证码</label
+												>
+												<div class="flex gap-2">
+													<input
+														bind:value={verificationCode}
+														type="text"
+														id="verification-code"
+														class="flex-1 my-0.5 text-sm outline-hidden bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-600"
+														placeholder="请输入验证码"
+														required
+													/>
+													<button
+														type="button"
+														on:click={sendCodeHandler}
+														class="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded"
+													>
+														发送验证码
+													</button>
+												</div>
+											</div>
 										{:else}
 											<div class="mb-2">
 												<label for="email" class="text-sm font-medium text-left mb-1 block"
@@ -303,21 +375,23 @@
 											</div>
 										{/if}
 
-										<div>
-											<label for="password" class="text-sm font-medium text-left mb-1 block"
-												>{$i18n.t('Password')}</label
-											>
-											<SensitiveInput
-												bind:value={password}
-												type="password"
-												id="password"
-												class="my-0.5 w-full text-sm outline-hidden bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-600"
-												placeholder={$i18n.t('Enter Your Password')}
-												autocomplete={mode === 'signup' ? 'new-password' : 'current-password'}
-												name="password"
-												required
-											/>
-										</div>
+										{#if mode !== 'phone-signin' && mode !== 'phone-signup'}
+											<div>
+												<label for="password" class="text-sm font-medium text-left mb-1 block"
+													>{$i18n.t('Password')}</label
+												>
+												<SensitiveInput
+													bind:value={password}
+													type="password"
+													id="password"
+													class="my-0.5 w-full text-sm outline-hidden bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-600"
+													placeholder={$i18n.t('Enter Your Password')}
+													autocomplete={mode === 'signup' ? 'new-password' : 'current-password'}
+													name="password"
+													required
+												/>
+											</div>
+										{/if}
 
 										{#if mode === 'signup' && $config?.features?.enable_signup_password_confirmation}
 											<div class="mt-2">
@@ -356,14 +430,18 @@
 											>
 												{mode === 'signin'
 													? $i18n.t('Sign in')
-													: ($config?.onboarding ?? false)
-														? $i18n.t('Create Admin Account')
-														: $i18n.t('Create Account')}
+													: mode === 'phone-signin'
+														? '手机号登录'
+														: mode === 'phone-signup'
+															? '手机号注册'
+															: ($config?.onboarding ?? false)
+																? $i18n.t('Create Admin Account')
+																: $i18n.t('Create Account')}
 											</button>
 
 											{#if $config?.features.enable_signup && !($config?.onboarding ?? false)}
 												<div class=" mt-4 text-sm text-center">
-													{mode === 'signin'
+													{mode === 'signin' || mode === 'phone-signin'
 														? $i18n.t("Don't have an account?")
 														: $i18n.t('Already have an account?')}
 
@@ -373,12 +451,16 @@
 														on:click={() => {
 															if (mode === 'signin') {
 																mode = 'signup';
+															} else if (mode === 'phone-signin') {
+																mode = 'phone-signup';
+															} else if (mode === 'phone-signup') {
+																mode = 'phone-signin';
 															} else {
 																mode = 'signin';
 															}
 														}}
 													>
-														{mode === 'signin' ? $i18n.t('Sign up') : $i18n.t('Sign in')}
+														{mode === 'signin' || mode === 'phone-signin' ? $i18n.t('Sign up') : $i18n.t('Sign in')}
 													</button>
 												</div>
 											{/if}

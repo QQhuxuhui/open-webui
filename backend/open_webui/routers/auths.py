@@ -30,6 +30,7 @@ from open_webui.env import (
     WEBUI_AUTH_COOKIE_SECURE,
     WEBUI_AUTH_SIGNOUT_REDIRECT_URL,
     ENABLE_INITIAL_ADMIN_SIGNUP,
+    ENABLE_EMAIL_AUTH,
     SRC_LOG_LEVELS,
 )
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -462,6 +463,13 @@ async def ldap_auth(request: Request, response: Response, form_data: LdapForm):
 
 @router.post("/signin", response_model=SessionUserResponse)
 async def signin(request: Request, response: Response, form_data: SigninForm):
+    # 检查是否禁用了邮箱认证
+    if not ENABLE_EMAIL_AUTH:
+        raise HTTPException(
+            status_code=403,
+            detail="邮箱认证已禁用，请使用手机号登录"
+        )
+
     if WEBUI_AUTH_TRUSTED_EMAIL_HEADER:
         if WEBUI_AUTH_TRUSTED_EMAIL_HEADER not in request.headers:
             raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_TRUSTED_HEADER)
@@ -563,6 +571,13 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
 
 @router.post("/signup", response_model=SessionUserResponse)
 async def signup(request: Request, response: Response, form_data: SignupForm):
+    # 检查是否禁用了邮箱认证
+    if not ENABLE_EMAIL_AUTH:
+        raise HTTPException(
+            status_code=403,
+            detail="邮箱注册已禁用，请使用手机号注册"
+        )
+
     has_users = Users.has_users()
 
     if WEBUI_AUTH:
