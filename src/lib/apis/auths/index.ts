@@ -734,9 +734,23 @@ export const phoneSignUp = async (
 	phoneNumber: string,
 	verificationCode: string,
 	password: string,
-	profile_image_url: string
+	profile_image_url: string,
+	email?: string
 ) => {
 	let error = null;
+
+	const body: any = {
+		name: name,
+		phone_number: phoneNumber,
+		verification_code: verificationCode,
+		password: password,
+		profile_image_url: profile_image_url
+	};
+
+	// 如果提供了邮箱，添加到请求体中
+	if (email && email.trim() !== '') {
+		body.email = email;
+	}
 
 	const res = await fetch(`${WEBUI_API_BASE_URL}/auths/phone/signup`, {
 		method: 'POST',
@@ -744,13 +758,7 @@ export const phoneSignUp = async (
 			'Content-Type': 'application/json'
 		},
 		credentials: 'include',
-		body: JSON.stringify({
-			name: name,
-			phone_number: phoneNumber,
-			verification_code: verificationCode,
-			password: password,
-			profile_image_url: profile_image_url
-		})
+		body: JSON.stringify(body)
 	})
 		.then(async (res) => {
 			if (!res.ok) throw await res.json();

@@ -123,7 +123,7 @@
 	};
 
 	const phoneSignUpHandler = async () => {
-		const sessionUser = await phoneSignUp(name, phoneNumber, verificationCode, password, generateInitialsImage(name))
+		const sessionUser = await phoneSignUp(name, phoneNumber, verificationCode, password, generateInitialsImage(name), email)
 			.catch((error) => {
 				toast.error(`${error}`);
 				return null;
@@ -369,7 +369,7 @@
 										{:else if mode === 'phone-signup'}
 											<div class="mb-2">
 												<label for="phone" class="text-sm font-medium text-left mb-1 block"
-													>手机号</label
+													>手机号 <span class="text-red-500">*</span></label
 												>
 												<input
 													bind:value={phoneNumber}
@@ -380,6 +380,21 @@
 													name="phone"
 													placeholder="请输入手机号"
 													required
+												/>
+											</div>
+
+											<div class="mb-2">
+												<label for="email-signup" class="text-sm font-medium text-left mb-1 block"
+													>邮箱 <span class="text-xs text-gray-500">(可选)</span></label
+												>
+												<input
+													bind:value={email}
+													type="email"
+													id="email-signup"
+													class="my-0.5 w-full text-sm outline-hidden bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-600"
+													autocomplete="email"
+													name="email"
+													placeholder="请输入邮箱（可选）"
 												/>
 											</div>
 										{:else if mode === 'phone-signin'}
