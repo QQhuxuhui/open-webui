@@ -9,7 +9,7 @@
 	import { page } from '$app/stores';
 
 	import { getBackendConfig } from '$lib/apis';
-	import { ldapUserSignIn, getSessionUser, userSignIn, userSignUp, phoneSignIn, phoneSignUp, sendVerificationCode } from '$lib/apis/auths';
+	import { ldapUserSignIn, getSessionUser, userSignIn, userSignUp, phoneSignIn, phoneSignUp, phoneSignInWithPassword, sendVerificationCode } from '$lib/apis/auths';
 
 	import { WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
 	import { WEBUI_NAME, config, user, socket } from '$lib/stores';
@@ -19,6 +19,7 @@
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import OnBoarding from '$lib/components/OnBoarding.svelte';
 	import SensitiveInput from '$lib/components/common/SensitiveInput.svelte';
+	import SliderCaptcha from '$lib/components/SliderCaptcha.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -36,6 +37,9 @@
 	let ldapUsername = '';
 	let phoneNumber = '';
 	let verificationCode = '';
+	let phoneLoginMethod = 'code'; // 'code' 或 'password'
+	let sliderCaptcha;
+	let captchaVerified = false;
 
 	const setSessionUser = async (sessionUser) => {
 		if (sessionUser) {
@@ -89,15 +93,25 @@
 	};
 
 	const phoneSignInHandler = async () => {
-		const sessionUser = await phoneSignIn(phoneNumber, verificationCode).catch((error) => {
-			toast.error(`${error}`);
-			return null;
-		});
+		let sessionUser;
+		if (phoneLoginMethod === 'password') {
+			// 手机号+密码登录
+			sessionUser = await phoneSignInWithPassword(phoneNumber, password).catch((error) => {
+				toast.error(`${error}`);
+				return null;
+			});
+		} else {
+			// 手机号+验证码登录
+			sessionUser = await phoneSignIn(phoneNumber, verificationCode).catch((error) => {
+				toast.error(`${error}`);
+				return null;
+			});
+		}
 		await setSessionUser(sessionUser);
 	};
 
 	const phoneSignUpHandler = async () => {
-		const sessionUser = await phoneSignUp(name, phoneNumber, verificationCode, generateInitialsImage(name))
+		const sessionUser = await phoneSignUp(name, phoneNumber, verificationCode, password, generateInitialsImage(name))
 			.catch((error) => {
 				toast.error(`${error}`);
 				return null;
@@ -106,10 +120,31 @@
 	};
 
 	const sendCodeHandler = async () => {
+		if (!captchaVerified) {
+			toast.error('请先完成滑块验证');
+			return;
+		}
+
+		if (!phoneNumber) {
+			toast.error('请输入手机号');
+			return;
+		}
+
 		await sendVerificationCode(phoneNumber).catch((error) => {
 			toast.error(`${error}`);
+			return;
 		});
+
 		toast.success('验证码已发送');
+		// 重置滑块验证，防止重复发送
+		if (sliderCaptcha) {
+			sliderCaptcha.reset();
+			captchaVerified = false;
+		}
+	};
+
+	const handleCaptchaVerified = (event) => {
+		captchaVerified = event.detail.success;
 	};
 
 	const submitHandler = async () => {
@@ -335,28 +370,112 @@
 													required
 												/>
 											</div>
-											<div class="mb-2">
-												<label for="verification-code" class="text-sm font-medium text-left mb-1 block"
-													>验证码</label
-												>
-												<div class="flex gap-2">
-													<input
-														bind:value={verificationCode}
-														type="text"
-														id="verification-code"
-														class="flex-1 my-0.5 text-sm outline-hidden bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-600"
-														placeholder="请输入验证码"
-														required
-													/>
-													<button
-														type="button"
-														on:click={sendCodeHandler}
-														class="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded"
-													>
-														发送验证码
-													</button>
+
+											{#if mode === 'phone-signin'}
+												<!-- 手机号登录：支持密码或验证码两种方式 -->
+												<div class="mb-2">
+													<div class="flex gap-2 mb-2">
+														<button
+															type="button"
+															class="flex-1 py-1 px-3 text-sm rounded {phoneLoginMethod === 'password' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}"
+															on:click={() => phoneLoginMethod = 'password'}
+														>
+															密码登录
+														</button>
+														<button
+															type="button"
+															class="flex-1 py-1 px-3 text-sm rounded {phoneLoginMethod === 'code' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}"
+															on:click={() => phoneLoginMethod = 'code'}
+														>
+															验证码登录
+														</button>
+													</div>
+
+													{#if phoneLoginMethod === 'password'}
+														<label for="phone-password" class="text-sm font-medium text-left mb-1 block"
+															>密码</label
+														>
+														<SensitiveInput
+															bind:value={password}
+															type="password"
+															id="phone-password"
+															class="my-0.5 w-full text-sm outline-hidden bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-600"
+															placeholder="请输入密码"
+															autocomplete="current-password"
+															required
+														/>
+													{:else}
+														<!-- 滑块验证 -->
+														<div class="mb-2">
+															<label class="text-sm font-medium text-left mb-1 block">
+																安全验证
+															</label>
+															<SliderCaptcha
+																bind:this={sliderCaptcha}
+																on:verified={handleCaptchaVerified}
+															/>
+														</div>
+
+														<label for="verification-code" class="text-sm font-medium text-left mb-1 block"
+															>验证码</label
+														>
+														<div class="flex gap-2">
+															<input
+																bind:value={verificationCode}
+																type="text"
+																id="verification-code"
+																class="flex-1 my-0.5 text-sm outline-hidden bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-600"
+																placeholder="请输入验证码"
+																required
+															/>
+															<button
+																type="button"
+																on:click={sendCodeHandler}
+																class="px-3 py-1 text-sm {captchaVerified ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'} text-white rounded"
+																disabled={!captchaVerified}
+															>
+																发送验证码
+															</button>
+														</div>
+													{/if}
 												</div>
-											</div>
+											{:else if mode === 'phone-signup'}
+												<!-- 手机号注册：必须使用验证码验证 -->
+												<!-- 滑块验证 -->
+												<div class="mb-2">
+													<label class="text-sm font-medium text-left mb-1 block">
+														安全验证
+													</label>
+													<SliderCaptcha
+														bind:this={sliderCaptcha}
+														on:verified={handleCaptchaVerified}
+													/>
+												</div>
+
+												<div class="mb-2">
+													<label for="verification-code" class="text-sm font-medium text-left mb-1 block"
+														>手机验证码</label
+													>
+													<div class="flex gap-2">
+														<input
+															bind:value={verificationCode}
+															type="text"
+															id="verification-code"
+															class="flex-1 my-0.5 text-sm outline-hidden bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-600"
+															placeholder="请输入手机验证码"
+															required
+														/>
+														<button
+															type="button"
+															on:click={sendCodeHandler}
+															class="px-3 py-1 text-sm {captchaVerified ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'} text-white rounded"
+															disabled={!captchaVerified}
+														>
+															发送验证码
+														</button>
+													</div>
+												</div>
+											{/if}
 										{:else}
 											<div class="mb-2">
 												<label for="email" class="text-sm font-medium text-left mb-1 block"
@@ -375,7 +494,25 @@
 											</div>
 										{/if}
 
-										{#if mode !== 'phone-signin' && mode !== 'phone-signup'}
+										{#if mode !== 'phone-signin' && mode === 'phone-signup'}
+											<!-- 手机号注册需要密码 -->
+											<div>
+												<label for="password" class="text-sm font-medium text-left mb-1 block"
+													>设置密码</label
+												>
+												<SensitiveInput
+													bind:value={password}
+													type="password"
+													id="password"
+													class="my-0.5 w-full text-sm outline-hidden bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-600"
+													placeholder="请设置登录密码"
+													autocomplete="new-password"
+													name="password"
+													required
+												/>
+											</div>
+										{:else if mode !== 'phone-signin' && mode !== 'phone-signup'}
+											<!-- 传统邮箱认证的密码字段 -->
 											<div>
 												<label for="password" class="text-sm font-medium text-left mb-1 block"
 													>{$i18n.t('Password')}</label

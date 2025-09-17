@@ -1075,3 +1075,250 @@ async def get_api_key(user=Depends(get_current_user)):
         }
     else:
         raise HTTPException(404, detail=ERROR_MESSAGES.API_KEY_NOT_FOUND)
+
+
+# 手机号认证相关数据模型
+class PhoneSendCodeForm(BaseModel):
+    phone_number: str
+
+
+class PhoneSignUpForm(BaseModel):
+    phone_number: str
+    verification_code: str
+    password: str
+    name: str
+
+
+class PhoneSignInForm(BaseModel):
+    phone_number: str
+    verification_code: str
+
+
+class PhonePasswordSignInForm(BaseModel):
+    phone_number: str
+    password: str
+
+
+# 手机号认证相关路由
+@router.post("/phone/send-code", response_model=dict)
+async def send_verification_code(form_data: PhoneSendCodeForm):
+    """发送手机验证码"""
+    phone_number = form_data.phone_number
+
+    # 验证手机号格式
+    if not re.match(r'^1[3-9]\d{9}$', phone_number):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="手机号格式不正确"
+        )
+
+    # 这里应该集成实际的短信服务
+    # 目前返回模拟的成功响应
+    verification_code = "123456"  # 实际应该生成随机验证码
+
+    # 在实际项目中，应该：
+    # 1. 生成随机6位数验证码
+    # 2. 存储到缓存（Redis）中，设置5分钟过期
+    # 3. 调用短信服务API发送验证码
+    # 4. 记录发送日志
+
+    return {
+        "message": "验证码发送成功",
+        "success": True
+    }
+
+
+@router.post("/phone/signup", response_model=SessionUserResponse)
+async def phone_signup(request: Request, response: Response, form_data: PhoneSignUpForm):
+    """手机号注册"""
+    if not ENABLE_EMAIL_AUTH:
+        # 检查手机号格式
+        if not re.match(r'^1[3-9]\d{9}$', form_data.phone_number):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="手机号格式不正确"
+            )
+
+        # 验证验证码（实际项目中应该从缓存中验证）
+        if form_data.verification_code != "123456":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="验证码错误"
+            )
+
+        # 检查用户是否已存在（使用手机号作为邮箱字段）
+        if Users.get_user_by_email(form_data.phone_number):
+            raise HTTPException(400, "手机号已被注册")
+
+        try:
+            has_users = Users.has_users()
+            role = "admin" if not has_users else request.app.state.config.DEFAULT_USER_ROLE
+
+            hashed = get_password_hash(form_data.password)
+            user = Auths.insert_new_auth(
+                form_data.phone_number,  # 使用手机号作为邮箱字段
+                hashed,
+                form_data.name,
+                "",  # profile_image_url为空
+                role,
+            )
+
+            if user:
+                expires_delta = parse_duration(request.app.state.config.JWT_EXPIRES_IN)
+                expires_at = None
+                if expires_delta:
+                    expires_at = int(time.time()) + int(expires_delta.total_seconds())
+
+                token = create_token(
+                    data={"id": user.id},
+                    expires_delta=expires_delta,
+                )
+
+                datetime_expires_at = (
+                    datetime.datetime.fromtimestamp(expires_at, datetime.timezone.utc)
+                    if expires_at
+                    else None
+                )
+
+                # Set httponly cookie
+                response.set_cookie(
+                    key="token",
+                    value=token,
+                    expires=datetime_expires_at,
+                    httponly=True,
+                    samesite=WEBUI_AUTH_COOKIE_SAME_SITE,
+                    secure=WEBUI_AUTH_COOKIE_SECURE,
+                )
+
+                user_permissions = get_permissions(
+                    user.id, request.app.state.config.USER_PERMISSIONS
+                )
+
+                return {
+                    "token": token,
+                    "token_type": "Bearer",
+                    "user": UserResponse(**user.model_dump(), **user_permissions),
+                }
+            else:
+                raise HTTPException(500, "注册失败")
+        except Exception as err:
+            raise HTTPException(500, str(err))
+    else:
+        raise HTTPException(403, "手机号注册功能已禁用")
+
+
+@router.post("/phone/signin", response_model=SessionUserResponse)
+async def phone_signin(request: Request, response: Response, form_data: PhoneSignInForm):
+    """手机号验证码登录"""
+    if not ENABLE_EMAIL_AUTH:
+        # 检查手机号格式
+        if not re.match(r'^1[3-9]\d{9}$', form_data.phone_number):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="手机号格式不正确"
+            )
+
+        # 验证验证码（实际项目中应该从缓存中验证）
+        if form_data.verification_code != "123456":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="验证码错误"
+            )
+
+        # 查找用户（使用手机号作为邮箱字段查找）
+        user = Users.get_user_by_email(form_data.phone_number)
+        if not user:
+            raise HTTPException(400, "用户不存在，请先注册")
+
+        expires_delta = parse_duration(request.app.state.config.JWT_EXPIRES_IN)
+        expires_at = None
+        if expires_delta:
+            expires_at = int(time.time()) + int(expires_delta.total_seconds())
+
+        token = create_token(
+            data={"id": user.id},
+            expires_delta=expires_delta,
+        )
+
+        datetime_expires_at = (
+            datetime.datetime.fromtimestamp(expires_at, datetime.timezone.utc)
+            if expires_at
+            else None
+        )
+
+        # Set httponly cookie
+        response.set_cookie(
+            key="token",
+            value=token,
+            expires=datetime_expires_at,
+            httponly=True,
+            samesite=WEBUI_AUTH_COOKIE_SAME_SITE,
+            secure=WEBUI_AUTH_COOKIE_SECURE,
+        )
+
+        user_permissions = get_permissions(
+            user.id, request.app.state.config.USER_PERMISSIONS
+        )
+
+        return {
+            "token": token,
+            "token_type": "Bearer",
+            "user": UserResponse(**user.model_dump(), **user_permissions),
+        }
+    else:
+        raise HTTPException(403, "手机号登录功能已禁用")
+
+
+@router.post("/phone/signin-password", response_model=SessionUserResponse)
+async def phone_signin_password(request: Request, response: Response, form_data: PhonePasswordSignInForm):
+    """手机号密码登录"""
+    if not ENABLE_EMAIL_AUTH:
+        # 检查手机号格式
+        if not re.match(r'^1[3-9]\d{9}$', form_data.phone_number):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="手机号格式不正确"
+            )
+
+        # 查找用户（使用手机号作为邮箱字段查找）
+        user = Auths.authenticate_user(form_data.phone_number, form_data.password)
+        if not user:
+            raise HTTPException(400, "手机号或密码错误")
+
+        expires_delta = parse_duration(request.app.state.config.JWT_EXPIRES_IN)
+        expires_at = None
+        if expires_delta:
+            expires_at = int(time.time()) + int(expires_delta.total_seconds())
+
+        token = create_token(
+            data={"id": user.id},
+            expires_delta=expires_delta,
+        )
+
+        datetime_expires_at = (
+            datetime.datetime.fromtimestamp(expires_at, datetime.timezone.utc)
+            if expires_at
+            else None
+        )
+
+        # Set httponly cookie
+        response.set_cookie(
+            key="token",
+            value=token,
+            expires=datetime_expires_at,
+            httponly=True,
+            samesite=WEBUI_AUTH_COOKIE_SAME_SITE,
+            secure=WEBUI_AUTH_COOKIE_SECURE,
+        )
+
+        user_permissions = get_permissions(
+            user.id, request.app.state.config.USER_PERMISSIONS
+        )
+
+        return {
+            "token": token,
+            "token_type": "Bearer",
+            "user": UserResponse(**user.model_dump(), **user_permissions),
+        }
+    else:
+        raise HTTPException(403, "手机号登录功能已禁用")

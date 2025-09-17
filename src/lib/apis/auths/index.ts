@@ -733,6 +733,7 @@ export const phoneSignUp = async (
 	name: string,
 	phoneNumber: string,
 	verificationCode: string,
+	password: string,
 	profile_image_url: string
 ) => {
 	let error = null;
@@ -747,7 +748,39 @@ export const phoneSignUp = async (
 			name: name,
 			phone_number: phoneNumber,
 			verification_code: verificationCode,
+			password: password,
 			profile_image_url: profile_image_url
+		})
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
+};
+
+export const phoneSignInWithPassword = async (phoneNumber: string, password: string) => {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/auths/phone/signin-password`, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		credentials: 'include',
+		body: JSON.stringify({
+			phone_number: phoneNumber,
+			password: password
 		})
 	})
 		.then(async (res) => {
