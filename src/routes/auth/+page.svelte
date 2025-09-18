@@ -835,8 +835,9 @@
 			</div>
 		</div>
 
-		{#if !$config?.metadata?.auth_logo_position}
-			<div class="fixed m-10 z-50">
+		<!-- 汉云大模型：隐藏左上角logo -->
+		{#if false}
+			<div class="fixed m-10 z-50" style="display: none;">
 				<div class="flex space-x-2">
 					<div class=" self-center">
 						<img
