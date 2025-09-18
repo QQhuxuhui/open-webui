@@ -1,23 +1,16 @@
-# Open WebUI 👋
+# 汉云大模型 🚀
 
-![GitHub stars](https://img.shields.io/github/stars/open-webui/open-webui?style=social)
-![GitHub forks](https://img.shields.io/github/forks/open-webui/open-webui?style=social)
-![GitHub watchers](https://img.shields.io/github/watchers/open-webui/open-webui?style=social)
-![GitHub repo size](https://img.shields.io/github/repo-size/open-webui/open-webui)
-![GitHub language count](https://img.shields.io/github/languages/count/open-webui/open-webui)
-![GitHub top language](https://img.shields.io/github/languages/top/open-webui/open-webui)
-![GitHub last commit](https://img.shields.io/github/last-commit/open-webui/open-webui?color=red)
-[![Discord](https://img.shields.io/badge/Discord-Open_WebUI-blue?logo=discord&logoColor=white)](https://discord.gg/5rJgQTnV4s)
-[![](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86)](https://github.com/sponsors/tjbck)
+**汉云大模型是一个基于先进AI技术的智能助手平台，专为中文用户量身定制。** 支持多种大语言模型运行器，如 **Ollama** 和 **OpenAI兼容API**，内置 **推理引擎** 支持RAG，为用户提供强大的AI交互体验。
 
-**Open WebUI is an [extensible](https://docs.openwebui.com/features/plugin/), feature-rich, and user-friendly self-hosted AI platform designed to operate entirely offline.** It supports various LLM runners like **Ollama** and **OpenAI-compatible APIs**, with **built-in inference engine** for RAG, making it a **powerful AI deployment solution**.
+## 特色功能
 
-Passionate about open-source AI? [Join our team →](https://careers.openwebui.com/)
+- 🌟 **中文优化**：专为中文语境优化的智能对话体验
+- 🔒 **隐私安全**：本地部署，数据不外传，保护用户隐私
+- 🎯 **智能交互**：支持多轮对话、上下文理解、知识问答
+- 🛠️ **易于部署**：简单配置，快速启动，开箱即用
+- 📱 **响应式设计**：支持桌面端和移动端访问
 
-![Open WebUI Demo](./demo.gif)
-
-> [!TIP]  
-> **Looking for an [Enterprise Plan](https://docs.openwebui.com/enterprise)?** – **[Speak with Our Sales Team Today!](mailto:sales@openwebui.com)**
+![汉云大模型演示](./demo.gif)
 >
 > Get **enhanced capabilities**, including **custom theming and branding**, **Service Level Agreement (SLA) support**, **Long-Term Support (LTS) versions**, and **more!**
 

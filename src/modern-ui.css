@@ -169,7 +169,8 @@
   transition: all 0.3s ease;
   background-color: white;
   padding: 0 0.5rem;
-  z-index: 10;
+  z-index: 12;
+  border-radius: 0.25rem;
 }
 
 .dark .floating-label {
@@ -324,6 +325,99 @@
 
 .dark .industrial-button-secondary:hover {
   background-color: #374151;
+}
+
+/* ====== 验证码发送按钮样式修复 ====== */
+.input-modern-wrapper .verification-send-btn {
+  z-index: 15;
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+/* 当浮动标签激活时，调整输入框右侧内边距 */
+.input-modern.with-button {
+  padding-right: 7rem;
+}
+
+/* 浮动标签层级已在上方定义 */
+
+/* 修复输入框容器的相对定位 */
+.input-modern-wrapper.relative {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* 改善表单布局间距 */
+.input-modern-wrapper {
+  margin-bottom: 1.5rem;
+}
+
+.input-modern-wrapper:last-child {
+  margin-bottom: 0;
+}
+
+/* 外部标签样式 - 用于密码等敏感输入框 */
+.input-modern-wrapper.with-external-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.external-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.25rem;
+  display: block;
+}
+
+.dark .external-label {
+  color: #d1d5db;
+}
+
+.input-modern.no-floating-label {
+  padding: 0.875rem 1rem;
+}
+
+.input-modern.no-floating-label::placeholder {
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+.dark .input-modern.no-floating-label::placeholder {
+  color: #6b7280;
+}
+
+/* 手机登录切换按钮组样式优化 */
+.login-method-toggle {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding: 0.25rem;
+  background-color: rgba(243, 244, 246, 0.5);
+  border-radius: 0.875rem;
+  backdrop-filter: blur(8px);
+}
+
+.dark .login-method-toggle {
+  background-color: rgba(55, 65, 81, 0.5);
+}
+
+.login-method-toggle button {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border-radius: 0.625rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
 }
 
 /* ====== 工业风格文字（兼容性） ====== */

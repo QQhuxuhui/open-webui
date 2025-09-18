@@ -246,7 +246,7 @@
 
 <svelte:head>
 	<title>
-		{`${$WEBUI_NAME}`}
+		汉云大模型 - 智能AI助手
 	</title>
 </svelte:head>
 
@@ -321,7 +321,7 @@
 							class="flex items-center justify-center gap-3 text-xl sm:text-2xl text-center font-semibold dark:text-gray-200"
 						>
 							<div>
-								{$i18n.t('Signing in to {{WEBUI_NAME}}', { WEBUI_NAME: $WEBUI_NAME })}
+								正在登录汉云大模型
 							</div>
 
 							<div>
@@ -358,26 +358,23 @@
 								<div class="mb-6 text-center">
 									<h1 class="text-3xl font-bold gradient-text mb-2">
 										{#if $config?.onboarding ?? false}
-											{$i18n.t(`Get started with {{WEBUI_NAME}}`, { WEBUI_NAME: $WEBUI_NAME })}
+											开始使用汉云大模型
 										{:else if mode === 'ldap'}
-											{$i18n.t(`Sign in to {{WEBUI_NAME}} with LDAP`, { WEBUI_NAME: $WEBUI_NAME })}
+											使用LDAP登录汉云大模型
 										{:else if mode === 'signin'}
-											{$i18n.t(`Sign in to {{WEBUI_NAME}}`, { WEBUI_NAME: $WEBUI_NAME })}
+											登录汉云大模型
 										{:else if mode === 'phone-signin'}
-											使用账号登录 {{$WEBUI_NAME}}
+											使用账号登录汉云大模型
 										{:else if mode === 'phone-signup'}
-											使用手机号注册 {{$WEBUI_NAME}}
+											使用手机号注册汉云大模型
 										{:else}
-											{$i18n.t(`Sign up to {{WEBUI_NAME}}`, { WEBUI_NAME: $WEBUI_NAME })}
+											注册汉云大模型账号
 										{/if}
 									</h1>
 
 									{#if $config?.onboarding ?? false}
 										<p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-											ⓘ {$WEBUI_NAME}
-											{$i18n.t(
-												'does not make any external connections, and your data stays securely on your locally hosted server.'
-											)}
+											ⓘ 汉云大模型不会进行任何外部连接，您的数据安全地保存在本地服务器上。
 										</p>
 									{/if}
 								</div>
@@ -451,17 +448,17 @@
 										{:else if mode === 'phone-signin'}
 											<!-- 手机号登录：支持密码或验证码两种方式 -->
 											<div class="mb-6">
-												<div class="flex gap-3 mb-6">
+												<div class="login-method-toggle">
 													<button
 														type="button"
-														class="flex-1 py-2.5 px-4 text-sm rounded-lg font-medium transition-all duration-200 {phoneLoginMethod === 'password' ? 'btn-primary-modern' : 'btn-secondary-modern'}"
+														class="text-sm font-medium transition-all duration-200 {phoneLoginMethod === 'password' ? 'btn-primary-modern' : 'btn-secondary-modern'}"
 														on:click={() => phoneLoginMethod = 'password'}
 													>
 														密码登录
 													</button>
 													<button
 														type="button"
-														class="flex-1 py-2.5 px-4 text-sm rounded-lg font-medium transition-all duration-200 {phoneLoginMethod === 'code' ? 'btn-primary-modern' : 'btn-secondary-modern'}"
+														class="text-sm font-medium transition-all duration-200 {phoneLoginMethod === 'code' ? 'btn-primary-modern' : 'btn-secondary-modern'}"
 														on:click={() => phoneLoginMethod = 'code'}
 													>
 														验证码登录
@@ -484,19 +481,19 @@
 														</label>
 													</div>
 
-													<div class="input-modern-wrapper">
+													<div class="input-modern-wrapper with-external-label">
+														<label for="account-password" class="external-label">
+															密码
+														</label>
 														<SensitiveInput
 															bind:value={password}
 															type="password"
 															id="account-password"
-															class="input-modern"
-															placeholder=" "
+															class="input-modern no-floating-label"
+															placeholder="请输入密码"
 															autocomplete="current-password"
 															required
 														/>
-														<label for="account-password" class="floating-label">
-															密码
-														</label>
 													</div>
 												{:else}
 													<div class="input-modern-wrapper">
@@ -534,7 +531,7 @@
 															bind:value={verificationCode}
 															type="text"
 															id="verification-code"
-															class="input-modern pr-24"
+															class="input-modern with-button"
 															placeholder=" "
 															required
 														/>
@@ -544,7 +541,7 @@
 														<button
 															type="button"
 															on:click={sendCodeHandler}
-															class="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 {captchaVerified ? 'btn-primary-modern' : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed border border-gray-300 dark:border-gray-600'}"
+															class="verification-send-btn px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 {captchaVerified ? 'btn-primary-modern' : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed border border-gray-300 dark:border-gray-600'}"
 															disabled={!captchaVerified}
 														>
 															发送验证码
@@ -572,55 +569,55 @@
 
 										{#if mode !== 'phone-signin' && mode === 'phone-signup'}
 											<!-- 手机号注册需要密码 -->
-											<div class="input-modern-wrapper">
+											<div class="input-modern-wrapper with-external-label">
+												<label for="password" class="external-label">
+													设置密码
+												</label>
 												<SensitiveInput
 													bind:value={password}
 													type="password"
 													id="password"
-													class="input-modern"
-													placeholder=" "
+													class="input-modern no-floating-label"
+													placeholder="请设置登录密码"
 													autocomplete="new-password"
 													name="password"
 													required
 												/>
-												<label for="password" class="floating-label">
-													设置密码
-												</label>
 											</div>
 										{:else if mode !== 'phone-signin' && mode !== 'phone-signup'}
 											<!-- 传统邮箱认证的密码字段 -->
-											<div class="input-modern-wrapper">
+											<div class="input-modern-wrapper with-external-label">
+												<label for="password" class="external-label">
+													{$i18n.t('Password')}
+												</label>
 												<SensitiveInput
 													bind:value={password}
 													type="password"
 													id="password"
-													class="input-modern"
-													placeholder=" "
+													class="input-modern no-floating-label"
+													placeholder={mode === 'signup' ? '请设置密码' : '请输入密码'}
 													autocomplete={mode === 'signup' ? 'new-password' : 'current-password'}
 													name="password"
 													required
 												/>
-												<label for="password" class="floating-label">
-													{$i18n.t('Password')}
-												</label>
 											</div>
 										{/if}
 
 										{#if mode === 'signup' && $config?.features?.enable_signup_password_confirmation}
-											<div class="input-modern-wrapper">
+											<div class="input-modern-wrapper with-external-label">
+												<label for="confirm-password" class="external-label">
+													{$i18n.t('Confirm Password')}
+												</label>
 												<SensitiveInput
 													bind:value={confirmPassword}
 													type="password"
 													id="confirm-password"
-													class="input-modern"
-													placeholder=" "
+													class="input-modern no-floating-label"
+													placeholder="请再次输入密码"
 													autocomplete="new-password"
 													name="confirm-password"
 													required
 												/>
-												<label for="confirm-password" class="floating-label">
-													{$i18n.t('Confirm Password')}
-												</label>
 											</div>
 										{/if}
 									</div>
