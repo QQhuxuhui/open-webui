@@ -29,6 +29,7 @@ class User(Base):
 
     email = Column(String)
     username = Column(String(50), nullable=True)
+    phone = Column(String(20), nullable=True, unique=True)
 
     role = Column(String)
     profile_image_url = Column(Text)
@@ -61,6 +62,7 @@ class UserModel(BaseModel):
 
     email: str
     username: Optional[str] = None
+    phone: Optional[str] = None
 
     role: str = "pending"
     profile_image_url: str
@@ -201,6 +203,14 @@ class UsersTable:
         try:
             with get_db() as db:
                 user = db.query(User).filter_by(oauth_sub=sub).first()
+                return UserModel.model_validate(user)
+        except Exception:
+            return None
+
+    def get_user_by_phone(self, phone: str) -> Optional[UserModel]:
+        try:
+            with get_db() as db:
+                user = db.query(User).filter_by(phone=phone).first()
                 return UserModel.model_validate(user)
         except Exception:
             return None

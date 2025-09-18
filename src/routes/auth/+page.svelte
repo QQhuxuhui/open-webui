@@ -174,6 +174,11 @@
 		}
 	};
 
+	const phoneAuthHandler = async (event) => {
+		const sessionUser = event.detail;
+		await setSessionUser(sessionUser);
+	};
+
 	const checkOauthCallback = async () => {
 		// Get the value of the 'token' cookie
 		function getCookie(name) {
@@ -371,7 +376,29 @@
 									{/if}
 								</div>
 
-								{#if $config?.features.enable_login_form || $config?.features.enable_ldap || form}
+								{#if mode === 'phone-signin' || mode === 'phone-signup'}
+									<PhoneAuth 
+										mode={mode === 'phone-signin' ? 'signin' : 'signup'}
+										on:success={phoneAuthHandler}
+									/>
+									
+									<!-- 返回常规登录选项 -->
+									<div class="mt-4 text-sm text-center text-gray-600 dark:text-gray-400">
+										<button
+											class="font-medium text-blue-600 hover:underline"
+											type="button"
+											on:click={() => {
+												if (mode === 'phone-signin') {
+													mode = 'signin';
+												} else {
+													mode = 'signup';
+												}
+											}}
+										>
+											使用邮箱{mode === 'phone-signin' ? '登录' : '注册'}
+										</button>
+									</div>
+								{:else if $config?.features.enable_login_form || $config?.features.enable_ldap || form}
 									<div class="flex flex-col mt-4">
 										{#if mode === 'signup' || mode === 'phone-signup'}
 											<div class="input-modern-wrapper">
@@ -665,6 +692,24 @@
 														}}
 													>
 														{mode === 'signin' || mode === 'phone-signin' ? $i18n.t('Sign up') : $i18n.t('Sign in')}
+													</button>
+												</div>
+												
+												<!-- 手机认证切换选项 -->
+												<div class="mt-2 text-sm text-center text-gray-600 dark:text-gray-400">
+													或使用
+													<button
+														class="font-medium text-blue-600 hover:underline"
+														type="button"
+														on:click={() => {
+															if (mode === 'signin') {
+																mode = 'phone-signin';
+															} else {
+																mode = 'phone-signup';
+															}
+														}}
+													>
+														手机号{mode === 'signin' ? '登录' : '注册'}
 													</button>
 												</div>
 											{/if}

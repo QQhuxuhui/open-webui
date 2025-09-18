@@ -3,6 +3,7 @@ import uuid
 import time
 import datetime
 import logging
+import os
 from aiohttp import ClientSession
 
 from open_webui.models.auths import (
@@ -17,6 +18,14 @@ from open_webui.models.auths import (
     UpdatePasswordForm,
     UserResponse,
 )
+from open_webui.models.phone_auth import (
+    PhoneSignupForm,
+    PhoneSigninForm,
+    SendCodeForm,
+    VerifyCodeResponse,
+    PhoneVerifications,
+)
+from open_webui.utils.sms import sms_service
 from open_webui.models.users import Users, UpdateProfileForm
 from open_webui.models.groups import Groups
 

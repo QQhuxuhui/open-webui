@@ -46,6 +46,7 @@
 	import NotificationToast from '$lib/components/NotificationToast.svelte';
 	import AppSidebar from '$lib/components/app/AppSidebar.svelte';
 	import { chatCompletion } from '$lib/apis/openai';
+	import { initAIContentLabeling } from '$lib/components/compliance';
 
 	import { beforeNavigate } from '$app/navigation';
 	import { updated } from '$app/state';
@@ -281,7 +282,7 @@
 
 					if ($isLastActiveTab) {
 						if ($settings?.notificationEnabled ?? false) {
-							new Notification(`${title} • Open WebUI`, {
+							new Notification(`${title} • 汉云大模型`, {
 								body: content,
 								icon: `${WEBUI_BASE_URL}/static/favicon.png`
 							});
@@ -430,7 +431,7 @@
 			if (type === 'message') {
 				if ($isLastActiveTab) {
 					if ($settings?.notificationEnabled ?? false) {
-						new Notification(`${data?.user?.name} (#${event?.channel?.name}) • Open WebUI`, {
+						new Notification(`${data?.user?.name} (#${event?.channel?.name}) • 汉云大模型`, {
 							body: data?.content,
 							icon: data?.user?.profile_image_url ?? `${WEBUI_BASE_URL}/static/favicon.png`
 						});
@@ -673,6 +674,9 @@
 			document.getElementById('splash-screen')?.remove();
 			loaded = true;
 		}
+
+		// 初始化AI内容标识系统 - Chinese Compliance
+		initAIContentLabeling();
 
 		return () => {
 			window.removeEventListener('resize', onResize);

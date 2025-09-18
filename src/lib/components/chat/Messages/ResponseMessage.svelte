@@ -48,6 +48,8 @@
 	import ContentRenderer from './ContentRenderer.svelte';
 	import { KokoroWorker } from '$lib/workers/KokoroWorker';
 	import FileItem from '$lib/components/common/FileItem.svelte';
+	import AIContentLabel from '$lib/components/compliance/AIContentLabel.svelte';
+	import ReportModal from '$lib/components/compliance/ReportModal.svelte';
 	import FollowUps from './ResponseMessage/FollowUps.svelte';
 	import { fade } from 'svelte/transition';
 	import { flyAndScale } from '$lib/utils/transitions';
@@ -144,6 +146,7 @@
 	let citationsElement: HTMLDivElement;
 	let buttonsContainerElement: HTMLDivElement;
 	let showDeleteConfirm = false;
+	let showReportModal = false;
 
 	let model = null;
 	$: model = $models.find((m) => m.id === message.model);
@@ -1548,11 +1551,39 @@
 							/>
 						</div>
 					{/if}
+
+					<!-- AI内容标识 - Chinese Compliance -->
+					{#if message.done && !readOnly && message.role === 'assistant'}
+						<div class="flex items-center justify-between">
+							<AIContentLabel type="text" />
+							<!-- 举报按钮 -->
+							<button
+								on:click={() => showReportModal = true}
+								class="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 ml-4 px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+								title={$i18n.language.startsWith('zh') ? '举报此内容' : 'Report this content'}
+							>
+								<svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+								</svg>
+								{$i18n.language.startsWith('zh') ? '举报' : 'Report'}
+							</button>
+						</div>
+					{/if}
 				{/if}
 			</div>
 		</div>
 	</div>
 {/key}
+
+<!-- 举报模态框 - Chinese Compliance -->
+<ReportModal 
+	bind:show={showReportModal}
+	messageId={message.id}
+	chatId={chatId}
+	on:success={() => {
+		showReportModal = false;
+	}}
+/>
 
 <style>
 	.buttons::-webkit-scrollbar {
