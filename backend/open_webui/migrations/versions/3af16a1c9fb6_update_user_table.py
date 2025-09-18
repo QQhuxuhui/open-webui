@@ -10,6 +10,7 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import text
 
 # revision identifiers, used by Alembic.
 revision: str = "3af16a1c9fb6"
@@ -19,14 +20,50 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.add_column("user", sa.Column("username", sa.String(length=50), nullable=True))
-    op.add_column("user", sa.Column("bio", sa.Text(), nullable=True))
-    op.add_column("user", sa.Column("gender", sa.Text(), nullable=True))
-    op.add_column("user", sa.Column("date_of_birth", sa.Date(), nullable=True))
+    # Get database connection
+    conn = op.get_bind()
+
+    # Helper function to check if column exists
+    def column_exists(table_name, column_name):
+        result = conn.execute(
+            text(f"SELECT 1 FROM information_schema.columns WHERE table_name = '{table_name}' AND column_name = '{column_name}'")
+        )
+        return result.fetchone() is not None
+
+    # Add columns only if they don't exist
+    if not column_exists("user", "username"):
+        op.add_column("user", sa.Column("username", sa.String(length=50), nullable=True))
+
+    if not column_exists("user", "bio"):
+        op.add_column("user", sa.Column("bio", sa.Text(), nullable=True))
+
+    if not column_exists("user", "gender"):
+        op.add_column("user", sa.Column("gender", sa.Text(), nullable=True))
+
+    if not column_exists("user", "date_of_birth"):
+        op.add_column("user", sa.Column("date_of_birth", sa.Date(), nullable=True))
 
 
 def downgrade() -> None:
-    op.drop_column("user", "username")
-    op.drop_column("user", "bio")
-    op.drop_column("user", "gender")
-    op.drop_column("user", "date_of_birth")
+    # Get database connection
+    conn = op.get_bind()
+
+    # Helper function to check if column exists
+    def column_exists(table_name, column_name):
+        result = conn.execute(
+            text(f"SELECT 1 FROM information_schema.columns WHERE table_name = '{table_name}' AND column_name = '{column_name}'")
+        )
+        return result.fetchone() is not None
+
+    # Drop columns only if they exist
+    if column_exists("user", "username"):
+        op.drop_column("user", "username")
+
+    if column_exists("user", "bio"):
+        op.drop_column("user", "bio")
+
+    if column_exists("user", "gender"):
+        op.drop_column("user", "gender")
+
+    if column_exists("user", "date_of_birth"):
+        op.drop_column("user", "date_of_birth")

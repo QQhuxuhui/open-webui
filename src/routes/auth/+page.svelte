@@ -17,6 +17,7 @@
 	import { generateInitialsImage, canvasPixelTest, querystringValue } from '$lib/utils';
 
 	import Spinner from '$lib/components/common/Spinner.svelte';
+	import HanyunLoader from '$lib/components/common/HanyunLoader.svelte';
 	import OnBoarding from '$lib/components/OnBoarding.svelte';
 	import SensitiveInput from '$lib/components/common/SensitiveInput.svelte';
 	import SliderCaptcha from '$lib/components/SliderCaptcha.svelte';
@@ -320,13 +321,7 @@
 						<div
 							class="flex items-center justify-center gap-3 text-xl sm:text-2xl text-center font-semibold dark:text-gray-200"
 						>
-							<div>
-								正在登录汉云大模型
-							</div>
-
-							<div>
-								<Spinner className="size-5" />
-							</div>
+							<HanyunLoader text="正在登录汉云大模型" />
 						</div>
 					</div>
 				{:else}
@@ -356,20 +351,17 @@
 							>
 								<!-- 现代化标题 -->
 								<div class="mb-6 text-center">
-									<h1 class="text-3xl font-bold gradient-text mb-2">
-										{#if $config?.onboarding ?? false}
-											开始使用汉云大模型
-										{:else if mode === 'ldap'}
-											使用LDAP登录汉云大模型
-										{:else if mode === 'signin'}
-											登录汉云大模型
-										{:else if mode === 'phone-signin'}
-											使用账号登录汉云大模型
-										{:else if mode === 'phone-signup'}
-											使用手机号注册汉云大模型
-										{:else}
-											注册汉云大模型账号
-										{/if}
+									<h1 class="mb-2">
+										<div class="flex items-center justify-center gap-3 mb-4">
+											<img
+												crossorigin="anonymous"
+												src="{WEBUI_BASE_URL}/static/favicon.png"
+												class="size-12 rounded-lg shadow-md"
+												alt="HanyunLM Logo"
+											/>
+											<div class="text-5xl font-bold text-blue-600 dark:text-blue-400">HanyunLM</div>
+										</div>
+										<div class="text-xl font-medium text-gray-700 dark:text-gray-300">汉云大模型</div>
 									</h1>
 
 									{#if $config?.onboarding ?? false}

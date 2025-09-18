@@ -50,6 +50,7 @@
 	import { beforeNavigate } from '$app/navigation';
 	import { updated } from '$app/state';
 	import Spinner from '$lib/components/common/Spinner.svelte';
+	import HanyunLoader from '$lib/components/common/HanyunLoader.svelte';
 
 	// handle frontend updates (https://svelte.dev/docs/kit/configuration#version)
 	beforeNavigate(({ willUnload, to }) => {
@@ -686,7 +687,7 @@
 
 {#if showRefresh}
 	<div class=" py-5">
-		<Spinner className="size-5" />
+		<HanyunLoader text="正在刷新..." />
 	</div>
 {/if}
 

@@ -47,6 +47,7 @@
 	import UserMenu from './Sidebar/UserMenu.svelte';
 	import ChatItem from './Sidebar/ChatItem.svelte';
 	import Spinner from '../common/Spinner.svelte';
+	import HanyunLoader from '../common/HanyunLoader.svelte';
 	import Loader from '../common/Loader.svelte';
 	import Folder from '../common/Folder.svelte';
 	import Tooltip from '../common/Tooltip.svelte';
@@ -721,8 +722,8 @@
 				</a>
 
 				<a href="/" class="flex flex-1 px-1.5" on:click={newChatHandler}>
-					<div class=" self-center font-medium text-gray-850 dark:text-white font-primary">
-						{$WEBUI_NAME}
+					<div class=" self-center font-bold text-lg text-blue-600 dark:text-blue-400 font-primary">
+						HanyunLM
 					</div>
 				</a>
 				<Tooltip
@@ -1107,19 +1108,17 @@
 										}}
 									>
 										<div
-											class="w-full flex justify-center py-1 text-xs animate-pulse items-center gap-2"
+											class="w-full flex justify-center py-1 text-xs items-center gap-2"
 										>
-											<Spinner className=" size-4" />
-											<div class=" ">{$i18n.t('Loading...')}</div>
+											<HanyunLoader text={$i18n.t('Loading...')} />
 										</div>
 									</Loader>
 								{/if}
 							{:else}
 								<div
-									class="w-full flex justify-center py-1 text-xs animate-pulse items-center gap-2"
+									class="w-full flex justify-center py-1 text-xs items-center gap-2"
 								>
-									<Spinner className=" size-4" />
-									<div class=" ">{$i18n.t('Loading...')}</div>
+									<HanyunLoader text={$i18n.t('Loading...')} />
 								</div>
 							{/if}
 						</div>
