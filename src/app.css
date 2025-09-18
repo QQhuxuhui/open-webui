@@ -1,4 +1,5 @@
-@reference "./tailwind.css";
+@import "./tailwind.css";
+@import "./modern-ui.css";
 
 @font-face {
 	font-family: 'Inter';

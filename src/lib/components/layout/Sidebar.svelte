@@ -689,11 +689,11 @@
 	<div
 		bind:this={navElement}
 		id="sidebar"
-		class="h-screen max-h-[100dvh] min-h-screen select-none {$showSidebar
-			? 'bg-gray-50 dark:bg-gray-950 z-50'
+		class="industrial-sidebar h-screen max-h-[100dvh] min-h-screen select-none {$showSidebar
+			? 'z-50'
 			: ' bg-transparent z-0 '} {$isApp
 			? `ml-[4.5rem] md:ml-0 `
-			: ' transition-all duration-300 '} shrink-0 text-gray-900 dark:text-gray-200 text-sm fixed top-0 left-0 overflow-x-hidden
+			: ' transition-all duration-300 '} shrink-0 industrial-text-primary text-sm fixed top-0 left-0 overflow-x-hidden
         "
 		transition:slide={{ duration: 200, axis: 'x' }}
 		data-state={$showSidebar}
@@ -704,7 +704,7 @@
 				: 'invisible'}"
 		>
 			<div
-				class="sidebar px-1.5 pt-2 pb-1.5 flex justify-between space-x-1 text-gray-600 dark:text-gray-400 sticky top-0 z-10 bg-gray-50 dark:bg-gray-950"
+				class="sidebar px-1.5 pt-2 pb-1.5 flex justify-between space-x-1 industrial-text-secondary sticky top-0 z-10 industrial-header"
 			>
 				<a
 					class="flex items-center rounded-lg p-1.5 h-full justify-center hover:bg-gray-100 dark:hover:bg-gray-850 transition no-drag-region"

@@ -258,17 +258,63 @@
 	}}
 />
 
-<div class="w-full h-screen max-h-[100dvh] text-white relative" id="auth-page">
-	<div class="w-full h-full absolute top-0 left-0 bg-white dark:bg-black"></div>
+<!-- 工业级专业认证页面背景 -->
+<div class="w-full h-screen max-h-[100dvh] text-gray-800 relative overflow-hidden" id="auth-page">
+	<!-- 工业级背景设计 -->
+	<div class="auth-background absolute inset-0">
+		<!-- 主背景：浅蓝色渐变 -->
+		<div class="absolute inset-0 bg-gradient-to-br from-slate-50 via-blue-50 to-blue-100"></div>
 
-	<div class="w-full absolute top-0 left-0 right-0 h-8 drag-region" />
+		<!-- 几何网格纹理 -->
+		<div class="absolute inset-0 opacity-40">
+			<svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+				<defs>
+					<pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+						<path d="M 40 0 L 0 0 0 40" fill="none" stroke="#94a3b8" stroke-width="0.5"/>
+					</pattern>
+					<pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse">
+						<circle cx="10" cy="10" r="1" fill="#64748b" opacity="0.3"/>
+					</pattern>
+				</defs>
+				<rect width="100%" height="100%" fill="url(#grid)" />
+				<rect width="100%" height="100%" fill="url(#dots)" />
+			</svg>
+		</div>
+
+		<!-- 工业风几何装饰 -->
+		<div class="absolute inset-0">
+			<!-- 左上角装饰 -->
+			<div class="absolute top-0 left-0 w-64 h-64 transform -translate-x-32 -translate-y-32">
+				<div class="w-full h-full border border-blue-200/30 rounded-full"></div>
+				<div class="absolute inset-8 border border-blue-300/50 rounded-full"></div>
+			</div>
+
+			<!-- 右下角装饰 -->
+			<div class="absolute bottom-0 right-0 w-96 h-96 transform translate-x-48 translate-y-48">
+				<div class="w-full h-full border border-blue-200/30 rounded-full"></div>
+				<div class="absolute inset-12 border border-blue-300/50 rounded-full"></div>
+				<div class="absolute inset-24 border border-blue-400/40 rounded-full"></div>
+			</div>
+
+			<!-- 中间的六边形装饰 -->
+			<div class="absolute top-1/4 right-1/4 w-32 h-32 transform rotate-12">
+				<svg viewBox="0 0 100 100" class="w-full h-full">
+					<polygon points="50,5 90,25 90,75 50,95 10,75 10,25"
+						fill="none" stroke="#60a5fa" stroke-width="1" opacity="0.3"/>
+				</svg>
+			</div>
+		</div>
+	</div>
+
+	<div class="w-full absolute top-0 left-0 right-0 h-8 drag-region z-10" />
 
 	{#if loaded}
+		<!-- 现代化认证容器 -->
 		<div
-			class="fixed bg-transparent min-h-screen w-full flex justify-center font-primary z-50 text-black dark:text-white"
+			class="fixed bg-transparent min-h-screen w-full flex justify-center items-center font-primary z-50"
 			id="auth-container"
 		>
-			<div class="w-full px-10 min-h-screen flex flex-col text-center">
+			<div class="w-full max-w-md mx-auto px-6">
 				{#if ($config?.features.auth_trusted_header ?? false) || $config?.features.auth === false}
 					<div class=" my-auto pb-10 w-full sm:max-w-md">
 						<div
@@ -284,17 +330,21 @@
 						</div>
 					</div>
 				{:else}
-					<div class="my-auto flex flex-col justify-center items-center">
-						<div class=" sm:max-w-md my-auto pb-10 w-full dark:text-gray-100">
+					<!-- 工业风格认证卡片 -->
+					<div class="glass-container-industrial p-8 animate-slide-up">
+						<div class="w-full text-gray-800 dark:text-gray-100">
 							{#if $config?.metadata?.auth_logo_position === 'center'}
-								<div class="flex justify-center mb-6">
-									<img
-										id="logo"
-										crossorigin="anonymous"
-										src="{WEBUI_BASE_URL}/static/favicon.png"
-										class="size-24 rounded-full"
-										alt=""
-									/>
+								<div class="flex justify-center mb-8">
+									<div class="relative">
+										<img
+											id="logo"
+											crossorigin="anonymous"
+											src="{WEBUI_BASE_URL}/static/favicon.png"
+											class="size-20 rounded-2xl shadow-lg border-2 border-white/20"
+											alt=""
+										/>
+										<div class="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/20 to-transparent"></div>
+									</div>
 								</div>
 							{/if}
 							<form
@@ -304,8 +354,9 @@
 									submitHandler();
 								}}
 							>
-								<div class="mb-1">
-									<div class=" text-2xl font-medium">
+								<!-- 现代化标题 -->
+								<div class="mb-6 text-center">
+									<h1 class="text-3xl font-bold gradient-text mb-2">
 										{#if $config?.onboarding ?? false}
 											{$i18n.t(`Get started with {{WEBUI_NAME}}`, { WEBUI_NAME: $WEBUI_NAME })}
 										{:else if mode === 'ldap'}
@@ -319,98 +370,98 @@
 										{:else}
 											{$i18n.t(`Sign up to {{WEBUI_NAME}}`, { WEBUI_NAME: $WEBUI_NAME })}
 										{/if}
-									</div>
+									</h1>
 
 									{#if $config?.onboarding ?? false}
-										<div class="mt-1 text-xs font-medium text-gray-600 dark:text-gray-500">
+										<p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
 											ⓘ {$WEBUI_NAME}
 											{$i18n.t(
 												'does not make any external connections, and your data stays securely on your locally hosted server.'
 											)}
-										</div>
+										</p>
 									{/if}
 								</div>
 
 								{#if $config?.features.enable_login_form || $config?.features.enable_ldap || form}
 									<div class="flex flex-col mt-4">
 										{#if mode === 'signup' || mode === 'phone-signup'}
-											<div class="mb-2">
-												<label for="name" class="text-sm font-medium text-left mb-1 block"
-													>{$i18n.t('Name')}</label
-												>
+											<div class="input-modern-wrapper">
 												<input
 													bind:value={name}
 													type="text"
 													id="name"
-													class="my-0.5 w-full text-sm outline-hidden bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-600"
+													class="input-modern"
 													autocomplete="name"
-													placeholder={$i18n.t('Enter Your Full Name')}
+													placeholder=" "
 													required
 												/>
+												<label for="name" class="floating-label">
+													{$i18n.t('Name')}
+												</label>
 											</div>
 										{/if}
 
 										{#if mode === 'ldap'}
-											<div class="mb-2">
-												<label for="username" class="text-sm font-medium text-left mb-1 block"
-													>{$i18n.t('Username')}</label
-												>
+											<div class="input-modern-wrapper">
 												<input
 													bind:value={ldapUsername}
 													type="text"
-													class="my-0.5 w-full text-sm outline-hidden bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-600"
+													id="username"
+													class="input-modern"
 													autocomplete="username"
 													name="username"
-													id="username"
-													placeholder={$i18n.t('Enter Your Username')}
+													placeholder=" "
 													required
 												/>
+												<label for="username" class="floating-label">
+													{$i18n.t('Username')}
+												</label>
 											</div>
 										{:else if mode === 'phone-signup'}
-											<div class="mb-2">
-												<label for="phone" class="text-sm font-medium text-left mb-1 block"
-													>手机号 <span class="text-red-500">*</span></label
-												>
+											<div class="input-modern-wrapper">
 												<input
 													bind:value={phoneNumber}
 													type="tel"
 													id="phone"
-													class="my-0.5 w-full text-sm outline-hidden bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-600"
+													class="input-modern"
 													autocomplete="tel"
 													name="phone"
-													placeholder="请输入手机号"
+													placeholder=" "
 													required
 												/>
+												<label for="phone" class="floating-label">
+													手机号 <span class="text-red-500 ml-1">*</span>
+												</label>
 											</div>
 
-											<div class="mb-2">
-												<label for="email-signup" class="text-sm font-medium text-left mb-1 block"
-													>邮箱 <span class="text-xs text-gray-500">(可选)</span></label
-												>
+											<div class="input-modern-wrapper">
 												<input
 													bind:value={email}
 													type="email"
 													id="email-signup"
-													class="my-0.5 w-full text-sm outline-hidden bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-600"
+													class="input-modern"
 													autocomplete="email"
 													name="email"
-													placeholder="请输入邮箱（可选）"
+													placeholder=" "
 												/>
+												<label for="email-signup" class="floating-label">
+													邮箱 <span class="text-gray-500 ml-1 text-xs">(可选)</span>
+												</label>
 											</div>
 										{:else if mode === 'phone-signin'}
 											<!-- 手机号登录：支持密码或验证码两种方式 -->
-											<div class="mb-2">
-												<div class="flex gap-2 mb-2">
+											<div class="mb-6">
+												<div class="flex gap-3 mb-6">
 													<button
 														type="button"
-														class="flex-1 py-1 px-3 text-sm rounded {phoneLoginMethod === 'password' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}"
+														class="flex-1 py-2.5 px-4 text-sm rounded-lg font-medium transition-all duration-200 {phoneLoginMethod === 'password' ? 'btn-primary-modern' : 'btn-secondary-modern'}"
 														on:click={() => phoneLoginMethod = 'password'}
 													>
 														密码登录
 													</button>
 													<button
 														type="button"
-														class="flex-1 py-1 px-3 text-sm rounded {phoneLoginMethod === 'code' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}"
+														class="flex-1 py-2.5 px-4 text-sm rounded-lg font-medium transition-all duration-200 {phoneLoginMethod === 'code' ? 'btn-primary-modern' : 'btn-secondary-modern'}"
 														on:click={() => phoneLoginMethod = 'code'}
 													>
 														验证码登录
@@ -418,170 +469,178 @@
 												</div>
 
 												{#if phoneLoginMethod === 'password'}
-													<label for="account-input" class="text-sm font-medium text-left mb-1 block"
-														>邮箱或手机号</label
-													>
-													<input
-														bind:value={accountInput}
-														type="text"
-														id="account-input"
-														class="my-0.5 w-full text-sm outline-hidden bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-600"
-														placeholder="请输入邮箱或手机号"
-														autocomplete="username"
-														required
-													/>
-													<label for="account-password" class="text-sm font-medium text-left mb-1 block mt-2"
-														>密码</label
-													>
-													<SensitiveInput
-														bind:value={password}
-														type="password"
-														id="account-password"
-														class="my-0.5 w-full text-sm outline-hidden bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-600"
-														placeholder="请输入密码"
-														autocomplete="current-password"
-														required
-													/>
+													<div class="input-modern-wrapper">
+														<input
+															bind:value={accountInput}
+															type="text"
+															id="account-input"
+															class="input-modern"
+															placeholder=" "
+															autocomplete="username"
+															required
+														/>
+														<label for="account-input" class="floating-label">
+															邮箱或手机号
+														</label>
+													</div>
+
+													<div class="input-modern-wrapper">
+														<SensitiveInput
+															bind:value={password}
+															type="password"
+															id="account-password"
+															class="input-modern"
+															placeholder=" "
+															autocomplete="current-password"
+															required
+														/>
+														<label for="account-password" class="floating-label">
+															密码
+														</label>
+													</div>
 												{:else}
-													<div class="mb-2">
-														<label for="phone" class="text-sm font-medium text-left mb-1 block"
-															>手机号</label
-														>
+													<div class="input-modern-wrapper">
 														<input
 															bind:value={phoneNumber}
 															type="tel"
 															id="phone"
-															class="my-0.5 w-full text-sm outline-hidden bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-600"
+															class="input-modern"
 															autocomplete="tel"
 															name="phone"
-															placeholder="请输入手机号"
+															placeholder=" "
 															required
 														/>
+														<label for="phone" class="floating-label">
+															手机号
+														</label>
 													</div>
+
 													<!-- 验证码登录逻辑 -->
-														<!-- 滑块验证 -->
-														<div class="mb-2">
-															<label class="text-sm font-medium text-left mb-1 block">
-																安全验证
-															</label>
+													<!-- 滑块验证 -->
+													<div class="mb-6">
+														<label class="block text-sm font-medium industrial-text-primary mb-3">
+															安全验证
+														</label>
+														<div class="glass-card-industrial p-4">
 															<SliderCaptcha
 																bind:this={sliderCaptcha}
 																on:verified={handleCaptchaVerified}
 															/>
 														</div>
+													</div>
 
-														<label for="verification-code" class="text-sm font-medium text-left mb-1 block"
-															>验证码</label
+													<div class="input-modern-wrapper relative">
+														<input
+															bind:value={verificationCode}
+															type="text"
+															id="verification-code"
+															class="input-modern pr-24"
+															placeholder=" "
+															required
+														/>
+														<label for="verification-code" class="floating-label">
+															验证码
+														</label>
+														<button
+															type="button"
+															on:click={sendCodeHandler}
+															class="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 {captchaVerified ? 'btn-primary-modern' : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed border border-gray-300 dark:border-gray-600'}"
+															disabled={!captchaVerified}
 														>
-														<div class="flex gap-2">
-															<input
-																bind:value={verificationCode}
-																type="text"
-																id="verification-code"
-																class="flex-1 my-0.5 text-sm outline-hidden bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-600"
-																placeholder="请输入验证码"
-																required
-															/>
-															<button
-																type="button"
-																on:click={sendCodeHandler}
-																class="px-3 py-1 text-sm {captchaVerified ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'} text-white rounded"
-																disabled={!captchaVerified}
-															>
-																发送验证码
-															</button>
-														</div>
+															发送验证码
+														</button>
+													</div>
 													{/if}
 												</div>
 										{:else}
-											<div class="mb-2">
-												<label for="email" class="text-sm font-medium text-left mb-1 block"
-													>{$i18n.t('Email')}</label
-												>
+											<div class="input-modern-wrapper">
 												<input
 													bind:value={email}
 													type="email"
 													id="email"
-													class="my-0.5 w-full text-sm outline-hidden bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-600"
+													class="input-modern"
 													autocomplete="email"
 													name="email"
-													placeholder={$i18n.t('Enter Your Email')}
+													placeholder=" "
 													required
 												/>
+												<label for="email" class="floating-label">
+													{$i18n.t('Email')}
+												</label>
 											</div>
 										{/if}
 
 										{#if mode !== 'phone-signin' && mode === 'phone-signup'}
 											<!-- 手机号注册需要密码 -->
-											<div>
-												<label for="password" class="text-sm font-medium text-left mb-1 block"
-													>设置密码</label
-												>
+											<div class="input-modern-wrapper">
 												<SensitiveInput
 													bind:value={password}
 													type="password"
 													id="password"
-													class="my-0.5 w-full text-sm outline-hidden bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-600"
-													placeholder="请设置登录密码"
+													class="input-modern"
+													placeholder=" "
 													autocomplete="new-password"
 													name="password"
 													required
 												/>
+												<label for="password" class="floating-label">
+													设置密码
+												</label>
 											</div>
 										{:else if mode !== 'phone-signin' && mode !== 'phone-signup'}
 											<!-- 传统邮箱认证的密码字段 -->
-											<div>
-												<label for="password" class="text-sm font-medium text-left mb-1 block"
-													>{$i18n.t('Password')}</label
-												>
+											<div class="input-modern-wrapper">
 												<SensitiveInput
 													bind:value={password}
 													type="password"
 													id="password"
-													class="my-0.5 w-full text-sm outline-hidden bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-600"
-													placeholder={$i18n.t('Enter Your Password')}
+													class="input-modern"
+													placeholder=" "
 													autocomplete={mode === 'signup' ? 'new-password' : 'current-password'}
 													name="password"
 													required
 												/>
+												<label for="password" class="floating-label">
+													{$i18n.t('Password')}
+												</label>
 											</div>
 										{/if}
 
 										{#if mode === 'signup' && $config?.features?.enable_signup_password_confirmation}
-											<div class="mt-2">
-												<label
-													for="confirm-password"
-													class="text-sm font-medium text-left mb-1 block"
-													>{$i18n.t('Confirm Password')}</label
-												>
+											<div class="input-modern-wrapper">
 												<SensitiveInput
 													bind:value={confirmPassword}
 													type="password"
 													id="confirm-password"
-													class="my-0.5 w-full text-sm outline-hidden bg-transparent"
-													placeholder={$i18n.t('Confirm Your Password')}
+													class="input-modern"
+													placeholder=" "
 													autocomplete="new-password"
 													name="confirm-password"
 													required
 												/>
+												<label for="confirm-password" class="floating-label">
+													{$i18n.t('Confirm Password')}
+												</label>
 											</div>
 										{/if}
 									</div>
 								{/if}
-								<div class="mt-5">
+								<div class="mt-8">
 									{#if $config?.features.enable_login_form || $config?.features.enable_ldap || form}
 										{#if mode === 'ldap'}
 											<button
-												class="bg-gray-700/5 hover:bg-gray-700/10 dark:bg-gray-100/5 dark:hover:bg-gray-100/10 dark:text-gray-300 dark:hover:text-white transition w-full rounded-full font-medium text-sm py-2.5"
+												class="btn-primary-modern w-full py-3 text-base font-semibold relative overflow-hidden"
 												type="submit"
 											>
+												<span class="btn-ripple"></span>
 												{$i18n.t('Authenticate')}
 											</button>
 										{:else}
 											<button
-												class="bg-gray-700/5 hover:bg-gray-700/10 dark:bg-gray-100/5 dark:hover:bg-gray-100/10 dark:text-gray-300 dark:hover:text-white transition w-full rounded-full font-medium text-sm py-2.5"
+												class="btn-primary-modern w-full py-3 text-base font-semibold relative overflow-hidden"
 												type="submit"
 											>
+												<span class="btn-ripple"></span>
 												{mode === 'signin'
 													? $i18n.t('Sign in')
 													: mode === 'phone-signin'
@@ -594,13 +653,15 @@
 											</button>
 
 											{#if $config?.features.enable_signup && !($config?.onboarding ?? false)}
-												<div class=" mt-4 text-sm text-center">
-													{mode === 'signin' || mode === 'phone-signin'
-														? $i18n.t("Don't have an account?")
-														: $i18n.t('Already have an account?')}
+												<div class="mt-6 text-sm text-center">
+													<span class="text-gray-600 dark:text-gray-400">
+														{mode === 'signin' || mode === 'phone-signin'
+															? $i18n.t("Don't have an account?")
+															: $i18n.t('Already have an account?')}
+													</span>
 
 													<button
-														class=" font-medium underline"
+														class="ml-2 font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors duration-200 underline decoration-2 underline-offset-4 hover:decoration-primary-500"
 														type="button"
 														on:click={() => {
 															if (mode === 'signin') {
@@ -624,21 +685,19 @@
 							</form>
 
 							{#if Object.keys($config?.oauth?.providers ?? {}).length > 0}
-								<div class="inline-flex items-center justify-center w-full">
-									<hr class="w-32 h-px my-4 border-0 dark:bg-gray-100/10 bg-gray-700/10" />
+								<div class="relative flex items-center justify-center w-full my-6">
+									<hr class="w-full h-px border-0 bg-gradient-to-r from-transparent via-gray-300/30 to-transparent dark:via-gray-600/30" />
 									{#if $config?.features.enable_login_form || $config?.features.enable_ldap || form}
 										<span
-											class="px-3 text-sm font-medium text-gray-900 dark:text-white bg-transparent"
+											class="absolute px-4 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full"
 											>{$i18n.t('or')}</span
 										>
 									{/if}
-
-									<hr class="w-32 h-px my-4 border-0 dark:bg-gray-100/10 bg-gray-700/10" />
 								</div>
-								<div class="flex flex-col space-y-2">
+								<div class="flex flex-col space-y-3">
 									{#if $config?.oauth?.providers?.google}
 										<button
-											class="flex justify-center items-center bg-gray-700/5 hover:bg-gray-700/10 dark:bg-gray-100/5 dark:hover:bg-gray-100/10 dark:text-gray-300 dark:hover:text-white transition w-full rounded-full font-medium text-sm py-2.5"
+											class="btn-secondary-modern flex justify-center items-center w-full py-3 text-sm font-semibold"
 											on:click={() => {
 												window.location.href = `${WEBUI_BASE_URL}/oauth/google/login`;
 											}}
@@ -667,7 +726,7 @@
 									{/if}
 									{#if $config?.oauth?.providers?.microsoft}
 										<button
-											class="flex justify-center items-center bg-gray-700/5 hover:bg-gray-700/10 dark:bg-gray-100/5 dark:hover:bg-gray-100/10 dark:text-gray-300 dark:hover:text-white transition w-full rounded-full font-medium text-sm py-2.5"
+											class="btn-secondary-modern flex justify-center items-center w-full py-3 text-sm font-semibold"
 											on:click={() => {
 												window.location.href = `${WEBUI_BASE_URL}/oauth/microsoft/login`;
 											}}
@@ -697,7 +756,7 @@
 									{/if}
 									{#if $config?.oauth?.providers?.github}
 										<button
-											class="flex justify-center items-center bg-gray-700/5 hover:bg-gray-700/10 dark:bg-gray-100/5 dark:hover:bg-gray-100/10 dark:text-gray-300 dark:hover:text-white transition w-full rounded-full font-medium text-sm py-2.5"
+											class="btn-secondary-modern flex justify-center items-center w-full py-3 text-sm font-semibold"
 											on:click={() => {
 												window.location.href = `${WEBUI_BASE_URL}/oauth/github/login`;
 											}}
@@ -717,7 +776,7 @@
 									{/if}
 									{#if $config?.oauth?.providers?.oidc}
 										<button
-											class="flex justify-center items-center bg-gray-700/5 hover:bg-gray-700/10 dark:bg-gray-100/5 dark:hover:bg-gray-100/10 dark:text-gray-300 dark:hover:text-white transition w-full rounded-full font-medium text-sm py-2.5"
+											class="btn-secondary-modern flex justify-center items-center w-full py-3 text-sm font-semibold"
 											on:click={() => {
 												window.location.href = `${WEBUI_BASE_URL}/oauth/oidc/login`;
 											}}
@@ -748,9 +807,9 @@
 							{/if}
 
 							{#if $config?.features.enable_ldap && $config?.features.enable_login_form}
-								<div class="mt-2">
+								<div class="mt-6">
 									<button
-										class="flex justify-center items-center text-xs w-full text-center underline"
+										class="btn-ghost-modern w-full py-2.5 text-sm font-medium"
 										type="button"
 										on:click={() => {
 											if (mode === 'ldap')

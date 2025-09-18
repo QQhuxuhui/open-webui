@@ -70,10 +70,10 @@
 	aria-label="New Chat"
 />
 
-<nav class="sticky top-0 z-30 w-full py-1 -mb-8 flex flex-col items-center drag-region">
+<nav class="industrial-header sticky top-0 z-30 w-full py-2 -mb-8 flex flex-col items-center drag-region">
 	<div class="flex items-center w-full pl-1.5 pr-1">
 		<div
-			class=" bg-linear-to-b via-50% from-white via-white to-transparent dark:from-gray-900 dark:via-gray-900 dark:to-transparent pointer-events-none absolute inset-0 -bottom-7 z-[-1]"
+			class="bg-gradient-to-b from-white to-white/95 dark:from-gray-800 dark:to-gray-800/95 pointer-events-none absolute inset-0 -bottom-7 z-[-1]"
 		></div>
 
 		<div class=" flex max-w-full w-full mx-auto px-1.5 md:px-2 pt-0.5 bg-transparent">
@@ -84,12 +84,12 @@
 					>
 						<Tooltip content={$showSidebar ? $i18n.t('Close Sidebar') : $i18n.t('Open Sidebar')}>
 							<button
-								class=" cursor-pointer flex rounded-lg hover:bg-gray-100 dark:hover:bg-gray-850 transition"
+								class="industrial-button-secondary p-1.5 rounded-md"
 								on:click={() => {
 									showSidebar.set(!$showSidebar);
 								}}
 							>
-								<div class=" self-center p-1.5">
+								<div class="self-center">
 									<Sidebar />
 								</div>
 							</button>
